@@ -1,7 +1,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <alloca.h>
 #include <iostream>
 
+// gl_Position's value determines where to place the vertex
 const char *vertexShader =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -10,11 +12,12 @@ const char *vertexShader =
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
 
+// FragColor = color displayed
 const char *fragmentShader = "#version 330 core\n"
                              "out vec4 FragColor;\n"
                              "void main()\n"
                              "{\n"
-                             "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                             "   FragColor = vec4(0.0f, 0.5f, 0.2f, 1.0f);\n"
                              "}\n\0";
 
 // callback function for when we resize
@@ -27,6 +30,7 @@ void processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
 }
 
+// returns a shader object
 static unsigned int CompileShader(unsigned int type, const char *source) {
   unsigned int id = glCreateShader(type);
   glShaderSource(id, 1, &source, nullptr);
@@ -49,6 +53,7 @@ static unsigned int CompileShader(unsigned int type, const char *source) {
   return id;
 }
 
+// returns a shader program object
 static unsigned int CreateShader() {
   unsigned int program = glCreateProgram();
   unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
@@ -102,21 +107,25 @@ int main() {
   // call our function when window is resized:
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+  /*
+    RENDERING !
+  */
   float vertices[] = {
       0.5f,  0.5f,  0.0f, // top right
       0.5f,  -0.5f, 0.0f, // bottom right
       -0.5f, -0.5f, 0.0f, // bottom left
       -0.5f, 0.5f,  0.0f  // top left
   };
-
-  unsigned int indicies[] = {0, 1, 3, 1, 2, 3};
-
+  unsigned int indicies[] = {0, 1, 3, 1, 2, 3}; // so we dont hold duplicates
   unsigned int VBO, VAO, EBO;
-  glGenVertexArrays(1, &VAO);
+
+  // Buffer Objects:
+  glGenVertexArrays(1, &VAO); // gen VAO 1st
   glGenBuffers(1, &VBO);
   glGenBuffers(1, &EBO);
   glBindVertexArray(VAO);
 
+  // Binding buffers:
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
@@ -124,25 +133,21 @@ int main() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies,
                GL_STATIC_DRAW);
 
+  // Set vertex attributes:
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  glBindVertexArray(0);
-
+  // Shader Program:
   unsigned int shader = CreateShader();
 
   // game loop:
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
-
-    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     glUseProgram(shader);
     glBindVertexArray(VAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);

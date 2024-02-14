@@ -4,13 +4,15 @@ project(GLStuff)
 set(CMAKE_CXX_STANDARD 11)
 
 # Vérifier le système d'exploitation
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(UNIX AND NOT APPLE)
     message(STATUS "Configuring for Linux")
+    find_package( OpenGL REQUIRED )
+    add_definitions(${OPENGL_DEFINITIONS})
     set(DEPENDENCIES_DIR "/home/naim/Code/Dependencies")
     set(LINUX_DEPENDENCIES pthread GL X11 Xrandr Xi dl glfw3)
 # set(LINUX_DEPENDENCIES pthread GL pthread glfw3-wayland)
 
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+elseif(WIN32)
     message(STATUS "Configuring for Windows")
     set(DEPENDENCIES_DIR "C:/Users/Naim/Code/Dependencies")
     set(WINDOWS_DEPENDENCIES )
@@ -19,7 +21,6 @@ else()
     message(FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-find_package( OpenGL REQUIRED )
 
 
 # Ajouter les fichiers source de votre projet
