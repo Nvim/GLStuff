@@ -6,10 +6,9 @@ set(CMAKE_CXX_STANDARD 11)
 # Vérifier le système d'exploitation
 if(UNIX AND NOT APPLE)
     message(STATUS "Configuring for Linux")
-    find_package( OpenGL REQUIRED )
-    add_definitions(${OPENGL_DEFINITIONS})
-    set(DEPENDENCIES_DIR "/home/naim/Code/Dependencies")
-    set(LINUX_DEPENDENCIES pthread GL X11 Xrandr Xi dl glfw3)
+    set(DEPENDENCIES_DIR deps)
+    add_subdirectory(deps/glfw)
+    set(LINUX_DEPENDENCIES pthread GL X11 Xrandr Xi dl)
 # set(LINUX_DEPENDENCIES pthread GL pthread glfw3-wayland)
 
 elseif(WIN32)
@@ -21,7 +20,9 @@ else()
     message(FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 # Ajouter les fichiers source de votre projet
 file(GLOB SOURCES
@@ -31,7 +32,8 @@ file(GLOB SOURCES
 
 # Ajouter les répertoires d'inclusion
 include_directories(
-  ${DEPENDENCIES_DIR}/Include
+  #${DEPENDENCIES_DIR}/Include
+  ./include
   ${OPENGL_INCLUDE_DIRS} 
 )
 
@@ -59,6 +61,7 @@ set_target_properties(GLStuffDebug PROPERTIES
 # Liens avec les bibliothèques
 target_link_libraries(GLStuffDebug
     PRIVATE
+    glfw
     ${LINUX_DEPENDENCIES}
     ${WINDOWS_DEPENDENCIES}
 )
@@ -72,6 +75,7 @@ set_target_properties(GLStuffRelease PROPERTIES
 # Liens avec les bibliothèques
 target_link_libraries(GLStuffRelease
     PRIVATE
+    glfw
     ${LINUX_DEPENDENCIES}
     ${WINDOWS_DEPENDENCIES}
 )

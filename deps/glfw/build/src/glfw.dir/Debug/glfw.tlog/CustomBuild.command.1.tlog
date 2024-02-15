@@ -1,0 +1,10 @@
+^C:\USERS\NAIM\CODE\GLSTUFF\GLFW-3.3.9\SRC\CMAKELISTS.TXT
+setlocal
+C:\Users\naim\scoop\apps\cmake\3.28.3\bin\cmake.exe -SC:/Users/naim/Code/glstuff/glfw-3.3.9 -BC:/Users/naim/Code/glstuff/glfw-3.3.9/build --check-stamp-file C:/Users/naim/Code/glstuff/glfw-3.3.9/build/src/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
