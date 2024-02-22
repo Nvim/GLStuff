@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
+#include <ostream>
 
 // Defines several possible options for camera movement. Used as abstraction to
 // stay away from window-system specific input methods
@@ -11,7 +13,7 @@ enum Camera_Movement { FORWARD, BACKWARD, LEFT, RIGHT };
 // Default camera values
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 2.5f;
+const float SPEED = 5.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
@@ -39,6 +41,7 @@ public:
          float pitch = PITCH)
       : Front(glm::vec3(0.0f, 0.0f, 0.0f)), MovementSpeed(SPEED),
         MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
+
     Position = position;
     WorldUp = up;
     Yaw = yaw;
@@ -102,7 +105,7 @@ public:
   // processes input received from a mouse scroll-wheel event. Only requires
   // input on the vertical wheel-axis
   void ProcessMouseScroll(float yoffset) {
-    Zoom -= (float)yoffset;
+    Zoom -= (float)yoffset * 3;
     if (Zoom < 1.0f)
       Zoom = 1.0f;
     if (Zoom > 45.0f)
