@@ -31,6 +31,14 @@ file(GLOB SOURCES
     src/*.cpp
 )
 
+include(FetchContent)
+
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY	https://github.com/g-truc/glm.git
+)
+FetchContent_MakeAvailable(glm)
+
 # Ajouter les répertoires d'inclusion
 include_directories(
   #${DEPENDENCIES_DIR}/Include
@@ -63,6 +71,7 @@ set_target_properties(GLStuffDebug PROPERTIES
 target_link_libraries(GLStuffDebug
     PRIVATE
     glfw
+    glm::glm
     ${LINUX_DEPENDENCIES}
     ${WINDOWS_DEPENDENCIES}
 )
@@ -77,6 +86,7 @@ set_target_properties(GLStuffRelease PROPERTIES
 target_link_libraries(GLStuffRelease
     PRIVATE
     glfw
+    glm::glm
     ${LINUX_DEPENDENCIES}
     ${WINDOWS_DEPENDENCIES}
 )
