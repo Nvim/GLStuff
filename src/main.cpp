@@ -1,15 +1,17 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <alloca.h>
 #include <iostream>
 #include "glm/ext/matrix_transform.hpp"
-#include "shader.hpp"
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "camera.hpp"
+#include <shader.hpp>
+#include <camera.hpp>
+#include <texture.hpp>
+#include <vao.hpp>
+#include <vbo.hpp>
+#include <ebo.hpp>
 
 // functions:
 GLenum glCheckError_(const char *file, int line);
@@ -152,40 +154,27 @@ int main() {
 
   /* Buffer Objects: */
   unsigned int VBO, VAO, EBO;
-  glGenVertexArrays(1, &VAO); // gen VAO 1st
-  glGenBuffers(1, &VBO);
-  // glGenBuffers(1, &EBO);
-  glBindVertexArray(VAO);
+  class VAO vao;
+  class VBO vbo(vertices, sizeof(vertices));
 
-  // Binding buffers:
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  vao.Bind();
+  // ebo.Bind();
 
-  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-  //              GL_STATIC_DRAW);
+  // position attribute:
+  vao.LinkVBO(vbo, 0, 3, GL_FLOAT, 5 * sizeof(float), (void *)0);
 
-  // Set vertex attributes:
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                        (void *)0); // position attribute
-  glEnableVertexAttribArray(0);
-
-  // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-  //                       (void *)(3 * sizeof(float)));
-  // glEnableVertexAttribArray(1);
-
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
+  // texture attribute:
+  vao.LinkVBO(vbo, 1, 2, GL_FLOAT, 5 * sizeof(float),
+              (void *)(3 * sizeof(float)));
 
   /* Loading textures: */
-  unsigned int texture = load_texture("res/container.jpg", 1);
-  unsigned int texture2 = load_texture("res/awesomeface.png", 0);
-  unsigned int texture3 = load_texture("res/huh.png", 0);
-  shader.use();
-  glUniform1i(glGetUniformLocation(shader.ID, "ourTexture"), 0);
-  glUniform1i(glGetUniformLocation(shader.ID, "otherTexture"), 1);
-  glUniform1i(glGetUniformLocation(shader.ID, "otherTexture2"), 2);
+  Texture texContainer("res/container.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB,
+                       GL_UNSIGNED_BYTE);
+  Texture texHuh("res/huh.png", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA,
+                 GL_UNSIGNED_BYTE);
+
+  texContainer.TexUnit(shader, "container", 0);
+  texHuh.TexUnit(shader, "huh", 1);
 
   /* Transformation Matrices: */
   glm::mat4 model = glm::mat4(1.0f);
@@ -208,14 +197,9 @@ int main() {
     int timeLoc = glGetUniformLocation(shader.ID, "iGlobalTime");
     glUniform1f(timeLoc, time);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, texture3);
-
     shader.use();
+    texContainer.Bind();
+    texHuh.Bind();
 
     view = glm::mat4(1.0f);
     projection = glm::mat4(1.0f);
@@ -227,7 +211,7 @@ int main() {
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
 
-    glBindVertexArray(VAO);
+    vao.Bind();
     for (int i = 0; i < 10; i++) {
       model = glm::mat4(1.0f);
       model = glm::translate(model, cubePositions[i]);
@@ -246,44 +230,13 @@ int main() {
   }
 
   // cleanup:
-  glDeleteVertexArrays(1, &VAO);
-  glDeleteBuffers(1, &VBO);
-  // glDeleteBuffers(1, &EBO);
+  vao.Delete();
+  vbo.Delete();
+  texContainer.Delete();
+  texHuh.Delete();
+  shader.Delete();
   glfwTerminate();
   return 0;
-}
-
-unsigned int load_texture(const char *file, const unsigned short jpg) {
-
-  // flip image:
-  stbi_set_flip_vertically_on_load(true);
-  int width, height, nrChannels;
-  unsigned char *data = stbi_load(file, &width, &height, &nrChannels, 0);
-  if (!data) {
-    std::cerr << "Failed to load texture" << std::endl;
-    return 1;
-  }
-  unsigned int texture;
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  // set texture filtering parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  if (jpg == 1) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, data);
-  } else {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data);
-  }
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(data);
-
-  return texture;
 }
 
 GLenum glCheckError_(const char *file, int line) {
