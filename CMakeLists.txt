@@ -8,6 +8,7 @@ if(UNIX AND NOT APPLE)
     message(STATUS "Configuring for Linux")
     set(DEPENDENCIES_DIR deps)
     add_subdirectory(deps/glfw)
+    add_subdirectory(deps/assimp)
     set(LINUX_DEPENDENCIES pthread GL X11 Xrandr Xi dl)
 # set(LINUX_DEPENDENCIES pthread GL pthread glfw3-wayland)
 
@@ -39,10 +40,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+set(ASSIMP_BUILD_TEST OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL_PDB OFF CACHE BOOL "" FORCE)
+
 # Ajouter les répertoires d'inclusion
 include_directories(
   #${DEPENDENCIES_DIR}/Include
   ./include
+  ${ASSIMP_INCLUDE_DIRS}
   ${OPENGL_INCLUDE_DIRS} 
 )
 
@@ -72,6 +77,7 @@ target_link_libraries(GLStuffDebug
     PRIVATE
     glfw
     glm::glm
+    ${ASSIMP_LIBRARIES}
     ${LINUX_DEPENDENCIES}
     ${WINDOWS_DEPENDENCIES}
 )
@@ -87,6 +93,7 @@ target_link_libraries(GLStuffRelease
     PRIVATE
     glfw
     glm::glm
+    ${ASSIMP_LIBRARIES}
     ${LINUX_DEPENDENCIES}
     ${WINDOWS_DEPENDENCIES}
 )

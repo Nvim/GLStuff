@@ -26,5 +26,6 @@ build/Makefile
 build/makefile.old
 build/glfwback
 build/glfw-3.3.9back
+build/deps/*
 bin/release/GLStuffRelease
 bin/debug/GLStuffDebug
