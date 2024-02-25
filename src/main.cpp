@@ -27,6 +27,7 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 1200;
 bool rotateCube = false;
+bool rotateLight = false;
 
 /* Camera: */
 Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
@@ -202,13 +203,33 @@ int main() {
                          float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f, 100.0f);
     view = camera.GetViewMatrix();
 
-    lightPos.x = 1.0f + sin(time) * 2.0f;
-    lightPos.z = 1.0f + cos(time) * 2.0f;
     /* draw lit cube: */
     litShader.use();
-    litShader.setVec3("objectColor", glm::vec3(0.0f, 0.7f, 0.82f));
     litShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-    litShader.setVec3("lightPos", lightPos);
+    //
+    glm::vec3 lightColor;
+    lightColor.x = sin(glfwGetTime() * 2.0f);
+    lightColor.y = sin(glfwGetTime() * 0.7f);
+    lightColor.z = sin(glfwGetTime() * 1.3f);
+    glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+    litShader.setVec3("material.ambient", glm::vec3(0.3f, 0.5f, 0.31f));
+    litShader.setVec3("material.diffuse", glm::vec3(0.3f, 0.5f, 0.31f));
+    litShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+    litShader.setFloat("material.shininess", 32.0f);
+    litShader.setVec3("light.ambient", ambientColor);
+    litShader.setVec3("light.diffuse", diffuseColor);
+    litShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+    litShader.setVec3("light.position", lightPos);
+    float x = lightPos.x;
+    float z = lightPos.z;
+    if (rotateLight) {
+      x = 1.0f + sin(time) * 2.0f;
+      z = 1.0f + cos(time) * 2.0f;
+    }
+    litShader.setVec3("light.position", glm::vec3(x, lightPos.y, z));
+    //
     litShader.setVec3("viewPos", camera.Position);
     texContainer.Bind();
 
@@ -227,9 +248,10 @@ int main() {
     lightSourceShader.use();
     model = glm::mat4(1.0f);
     // lightPos.z += cos(time) * radius;
-    model = glm::translate(model, lightPos);
+    model = glm::translate(model, glm::vec3(x, lightPos.y, z));
     model = glm::scale(model, glm::vec3(0.2f));
 
+    lightSourceShader.setVec3("lightColor", lightColor);
     lightSourceShader.setMat4("model", model);
     lightSourceShader.setMat4("view", view);
     lightSourceShader.setMat4("projection", projection);
@@ -301,6 +323,8 @@ void processInput(GLFWwindow *window) {
     glfwSetCursorPosCallback(window, mouse_callback);
   if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
     rotateCube == true ? rotateCube = false : rotateCube = true;
+  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+    rotateLight == true ? rotateLight = false : rotateLight = true;
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
