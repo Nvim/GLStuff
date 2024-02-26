@@ -132,7 +132,7 @@ int main() {
   // clang-format on
 
   /* Shader Program: */
-  Shader litShader("res/lighting/lit.vert", "res/lighting/lit.frag");
+  Shader litShader("res/lighting/lit.vert", "res/lighting/litFlashLight.frag");
   Shader lightSourceShader("res/lighting/lightSource.vert",
                            "res/lighting/lightSource.frag");
 
@@ -206,7 +206,7 @@ int main() {
       lightColor.x = sin(glfwGetTime() * 2.0f);
       lightColor.y = sin(glfwGetTime() * 0.7f);
     }
-    glm::vec3 diffuseColor = lightColor * glm::vec3(0.6f);
+    glm::vec3 diffuseColor = lightColor;
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.25f);
 
     litShader.setVec3("viewPos", camera.Position);
@@ -221,13 +221,20 @@ int main() {
     litShader.setVec3("light.ambient", ambientColor);
     litShader.setVec3("light.diffuse", diffuseColor);
     litShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+    litShader.setFloat("light.cutoff", glm::cos(glm::radians(5.5f)));
+    litShader.setFloat("light.outerCutoff", glm::cos(glm::radians(10.5f)));
+    litShader.setFloat("light.constant", 1.0f);
+    litShader.setFloat("light.linear", 0.007f);
+    litShader.setFloat("light.quadratic", 0.0002f);
     float x = lightPos.x;
     float z = lightPos.z;
     if (rotateLight) {
-      x = 1.0f + sin(time) * 2.0f;
-      z = 1.0f + cos(time) * 2.0f;
+      x = 1.0f + sin(time) * 20.0f;
+      // z = 1.0f + cos(time) * 2.0f;
     }
-    litShader.setVec3("light.position", glm::vec3(x, lightPos.y, z));
+    // litShader.setVec4("light.position", glm::vec4(x, lightPos.y, z, 1.0f));
+    litShader.setVec4("light.position", glm::vec4(camera.Position, 1.0f));
+    litShader.setVec3("light.direction", glm::vec3(camera.Front));
 
     // matrices:
     litShader.setMat4("view", view);
@@ -245,19 +252,19 @@ int main() {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     /* draw light source: */
-    lightSourceShader.use();
-    model = glm::mat4(1.0f);
-    // lightPos.z += cos(time) * radius;
-    model = glm::translate(model, glm::vec3(x, lightPos.y, z));
-    model = glm::scale(model, glm::vec3(0.2f));
-
-    lightSourceShader.setVec3("lightColor", lightColor);
-    lightSourceShader.setMat4("model", model);
-    lightSourceShader.setMat4("view", view);
-    lightSourceShader.setMat4("projection", projection);
-
-    lightVao.Bind();
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    // lightSourceShader.use();
+    // model = glm::mat4(1.0f);
+    // // lightPos.z += cos(time) * radius;
+    // model = glm::translate(model, glm::vec3(x, lightPos.y, z));
+    // model = glm::scale(model, glm::vec3(0.2f));
+    //
+    // lightSourceShader.setVec3("lightColor", lightColor);
+    // lightSourceShader.setMat4("model", model);
+    // lightSourceShader.setMat4("view", view);
+    // lightSourceShader.setMat4("projection", projection);
+    //
+    // lightVao.Bind();
+    // glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
