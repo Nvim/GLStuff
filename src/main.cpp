@@ -28,6 +28,7 @@ const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 1200;
 bool rotateCube = false;
 bool rotateLight = false;
+bool rgbLight = false;
 
 /* Camera: */
 Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
@@ -84,18 +85,6 @@ int main() {
   */
 
   // clang-format off
-  float vertices_old[] = {
-     // positions          // colors           // texture coords
-    0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-    0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
-  };
-  unsigned int indices[] = {
-    0, 1, 3, // first triangle
-    1, 2, 3  // second triangle
-  };
-
   float vertices[] = {
     /* position       */ /* texture */ /* normal */
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,  0.0f, -1.0f,
@@ -167,10 +156,16 @@ int main() {
                   (void *)(5 * sizeof(float)));
 
   /* Loading textures: */
-  Texture texContainer("res/container.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB,
-                       GL_UNSIGNED_BYTE);
+  Texture texContainer("res/container2.png", GL_TEXTURE_2D, GL_TEXTURE0,
+                       GL_RGBA, GL_UNSIGNED_BYTE);
+  Texture texSpecular("res/container2_specular.png", GL_TEXTURE_2D, GL_TEXTURE1,
+                      GL_RGBA, GL_UNSIGNED_BYTE);
+  Texture texEmissive("res/matrix.jpg", GL_TEXTURE_2D, GL_TEXTURE2, GL_RGB,
+                      GL_UNSIGNED_BYTE);
 
-  texContainer.TexUnit(litShader, "container", 0);
+  texContainer.TexUnit(litShader, "material.diffuse", 0);
+  texContainer.TexUnit(litShader, "material.specular", 1);
+  texContainer.TexUnit(litShader, "material.emissive", 2);
   cubeVao.Unbind();
 
   lightVao.Bind();
@@ -205,23 +200,27 @@ int main() {
 
     /* draw lit cube: */
     litShader.use();
-    litShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-    //
-    glm::vec3 lightColor;
-    lightColor.x = sin(glfwGetTime() * 2.0f);
-    lightColor.y = sin(glfwGetTime() * 0.7f);
-    lightColor.z = sin(glfwGetTime() * 1.3f);
-    glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
-    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+    glm::vec3 lightColor = glm::vec3(1.0f);
+    if (rgbLight) {
+      lightColor.z = sin(glfwGetTime() * 1.3f);
+      lightColor.x = sin(glfwGetTime() * 2.0f);
+      lightColor.y = sin(glfwGetTime() * 0.7f);
+    }
+    glm::vec3 diffuseColor = lightColor * glm::vec3(0.6f);
+    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.25f);
 
-    litShader.setVec3("material.ambient", glm::vec3(0.3f, 0.5f, 0.31f));
-    litShader.setVec3("material.diffuse", glm::vec3(0.3f, 0.5f, 0.31f));
-    litShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-    litShader.setFloat("material.shininess", 32.0f);
+    litShader.setVec3("viewPos", camera.Position);
+
+    // material:
+    // litShader.setVec3("material.ambient", glm::vec3(0.3f, 0.5f, 0.31f));
+    // litShader.setVec3("material.diffuse", glm::vec3(0.3f, 0.5f, 0.31f));
+    // litShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+    litShader.setFloat("material.shininess", 64.0f);
+
+    // light:
     litShader.setVec3("light.ambient", ambientColor);
     litShader.setVec3("light.diffuse", diffuseColor);
     litShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-    litShader.setVec3("light.position", lightPos);
     float x = lightPos.x;
     float z = lightPos.z;
     if (rotateLight) {
@@ -229,10 +228,8 @@ int main() {
       z = 1.0f + cos(time) * 2.0f;
     }
     litShader.setVec3("light.position", glm::vec3(x, lightPos.y, z));
-    //
-    litShader.setVec3("viewPos", camera.Position);
-    texContainer.Bind();
 
+    // matrices:
     litShader.setMat4("view", view);
     litShader.setMat4("projection", projection);
     if (rotateCube) {
@@ -241,6 +238,9 @@ int main() {
     }
     litShader.setMat4("model", model);
 
+    texContainer.Bind();
+    texSpecular.Bind();
+    texEmissive.Bind();
     cubeVao.Bind();
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -325,6 +325,8 @@ void processInput(GLFWwindow *window) {
     rotateCube == true ? rotateCube = false : rotateCube = true;
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
     rotateLight == true ? rotateLight = false : rotateLight = true;
+  if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+    rgbLight == true ? rgbLight = false : rgbLight = true;
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
