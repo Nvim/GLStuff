@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <string>
 #include "glm/ext/matrix_transform.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include <glm/glm.hpp>
@@ -29,6 +30,7 @@ const unsigned int SCR_HEIGHT = 1200;
 bool rotateCube = false;
 bool rotateLight = false;
 bool rgbLight = false;
+bool dirLight = false;
 
 /* Camera: */
 Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
@@ -129,10 +131,17 @@ int main() {
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f
   };
+  glm::vec3 pointLightPositions[] = {
+    glm::vec3( 0.7f,  0.2f,  2.0f),
+    glm::vec3( 2.3f, -3.3f, -4.0f),
+    glm::vec3(-4.0f,  2.0f, -12.0f),
+    glm::vec3( 0.0f,  0.0f, -3.0f)
+  };
+
   // clang-format on
 
   /* Shader Program: */
-  Shader litShader("res/lighting/lit.vert", "res/lighting/litFlashLight.frag");
+  Shader litShader("res/lighting/lit.vert", "res/lighting/litFinal.frag");
   Shader lightSourceShader("res/lighting/lightSource.vert",
                            "res/lighting/lightSource.frag");
 
@@ -177,6 +186,8 @@ int main() {
   glm::mat4 view = glm::mat4(1.0f);
   glm::mat4 projection = glm::mat4(1.0f);
 
+  float x = lightPos.x;
+  float z = lightPos.z;
   /* Game loop: */
   while (!glfwWindowShouldClose(window)) {
     view = glm::mat4(1.0f);
@@ -202,9 +213,9 @@ int main() {
     litShader.use();
     glm::vec3 lightColor = glm::vec3(1.0f);
     if (rgbLight) {
-      lightColor.z = sin(glfwGetTime() * 1.3f);
-      lightColor.x = sin(glfwGetTime() * 2.0f);
-      lightColor.y = sin(glfwGetTime() * 0.7f);
+      lightColor.x = fmax(sin(glfwGetTime() * 2.0f), 0.1f);
+      lightColor.y = fmax(cos(glfwGetTime() * 0.7f), 0.1f);
+      lightColor.z = fmax(sin(glfwGetTime() * 1.3f), 0.1f);
     }
     glm::vec3 diffuseColor = lightColor;
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.25f);
@@ -212,30 +223,41 @@ int main() {
     litShader.setVec3("viewPos", camera.Position);
 
     // material:
-    // litShader.setVec3("material.ambient", glm::vec3(0.3f, 0.5f, 0.31f));
-    // litShader.setVec3("material.diffuse", glm::vec3(0.3f, 0.5f, 0.31f));
-    // litShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
     litShader.setFloat("material.shininess", 64.0f);
 
-    // light:
-    litShader.setVec3("light.ambient", ambientColor);
-    litShader.setVec3("light.diffuse", diffuseColor);
-    litShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-    litShader.setFloat("light.cutoff", glm::cos(glm::radians(5.5f)));
-    litShader.setFloat("light.outerCutoff", glm::cos(glm::radians(10.5f)));
-    litShader.setFloat("light.constant", 1.0f);
-    litShader.setFloat("light.linear", 0.007f);
-    litShader.setFloat("light.quadratic", 0.0002f);
-    float x = lightPos.x;
-    float z = lightPos.z;
-    if (rotateLight) {
-      x = 1.0f + sin(time) * 20.0f;
-      // z = 1.0f + cos(time) * 2.0f;
+    // lights:
+    if (dirLight) {
+      litShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+      litShader.setVec3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+      litShader.setVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+      litShader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
     }
-    // litShader.setVec4("light.position", glm::vec4(x, lightPos.y, z, 1.0f));
-    litShader.setVec4("light.position", glm::vec4(camera.Position, 1.0f));
-    litShader.setVec3("light.direction", glm::vec3(camera.Front));
 
+    for (int i = 0; i < 4; i++) {
+      // if (rotateLight) {
+      //   x += 1.0f + sin(time) * 20.0f;
+      //   z += 1.0f + cos(time) * 2.0f;
+      // }
+      litShader.setVec3("pointLights[" + std::to_string(i) + "].ambient",
+                        ambientColor);
+      litShader.setVec3("pointLights[" + std::to_string(i) + "].diffuse",
+                        diffuseColor);
+      litShader.setVec3("pointLights[" + std::to_string(i) + "].specular",
+                        glm::vec3(1.0f, 1.0f, 1.0f));
+      litShader.setVec3("pointLights[" + std::to_string(i) + "].position",
+                        pointLightPositions[i]);
+      litShader.setFloat("pointLights[" + std::to_string(i) + "].constant",
+                         1.0f);
+      litShader.setFloat("pointLights[" + std::to_string(i) + "].linear",
+                         0.09f);
+      litShader.setFloat("pointLights[" + std::to_string(i) + "].quadratic",
+                         0.032f);
+    }
+    // litShader.setFloat("pointLights[" + std::to_string(i) + "].cutoff",
+    //                    glm::cos(glm::radians(12.0f)));
+    // litShader.setFloat("pointLights[" + std::to_string(i) +
+    // "].outerCutoff",
+    //                    glm::cos(glm::radians(17.5f)));
     // matrices:
     litShader.setMat4("view", view);
     litShader.setMat4("projection", projection);
@@ -252,19 +274,21 @@ int main() {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     /* draw light source: */
-    // lightSourceShader.use();
-    // model = glm::mat4(1.0f);
-    // // lightPos.z += cos(time) * radius;
-    // model = glm::translate(model, glm::vec3(x, lightPos.y, z));
-    // model = glm::scale(model, glm::vec3(0.2f));
-    //
-    // lightSourceShader.setVec3("lightColor", lightColor);
-    // lightSourceShader.setMat4("model", model);
-    // lightSourceShader.setMat4("view", view);
-    // lightSourceShader.setMat4("projection", projection);
-    //
-    // lightVao.Bind();
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
+    lightSourceShader.use();
+
+    lightVao.Bind();
+    for (int i = 0; i < 4; i++) {
+      model = glm::mat4(1.0f);
+      // lightPos.z += cos(time) * radius;
+      // model = glm::translate(model, glm::vec3(x, lightPos.y, z));
+      model = glm::translate(model, pointLightPositions[i]);
+      model = glm::scale(model, glm::vec3(0.2f));
+      lightSourceShader.setMat4("model", model);
+      lightSourceShader.setVec3("lightColor", lightColor);
+      lightSourceShader.setMat4("view", view);
+      lightSourceShader.setMat4("projection", projection);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -334,6 +358,8 @@ void processInput(GLFWwindow *window) {
     rotateLight == true ? rotateLight = false : rotateLight = true;
   if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
     rgbLight == true ? rgbLight = false : rgbLight = true;
+  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+    dirLight == true ? dirLight = false : dirLight = true;
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
