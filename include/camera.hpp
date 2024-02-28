@@ -1,5 +1,6 @@
 #pragma once
 
+#include "shader.hpp"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,6 +17,10 @@ const float PITCH = 0.0f;
 const float SPEED = 5.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
+
+// screen res:
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 1200;
 
 // An abstract camera class that processes input and calculates the
 // corresponding Euler Angles, Vectors and Matrices for use in OpenGL
@@ -34,20 +39,12 @@ public:
   float MovementSpeed;
   float MouseSensitivity;
   float Zoom;
+  float near, far;
 
   // constructor with vectors
   Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, -3.0f),
          glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW,
-         float pitch = PITCH)
-      : Front(glm::vec3(0.0f, 0.0f, 0.0f)), MovementSpeed(SPEED),
-        MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
-
-    Position = position;
-    WorldUp = up;
-    Yaw = yaw;
-    Pitch = pitch;
-    updateCameraVectors();
-  }
+         float pitch = PITCH);
   // constructor with scalar values
   Camera(float posX, float posY, float posZ, float upX, float upY, float upZ,
          float yaw, float pitch)
@@ -63,6 +60,15 @@ public:
   // returns the view matrix calculated using Euler Angles and the LookAt Matrix
   glm::mat4 GetViewMatrix() {
     return glm::lookAt(Position, Position + Front, Up);
+  }
+
+  // directly sets view*proj on specified shader
+  void setMatrix(Shader &shader, const char *uniform) {
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(
+        glm::radians(Zoom), float(SCR_WIDTH) / float(SCR_HEIGHT), near, far);
+    glm::mat4 view = GetViewMatrix();
+    shader.setMat4(uniform, projection * view);
   }
 
   // processes input received from any keyboard-like input system. Accepts input

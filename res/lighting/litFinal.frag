@@ -2,9 +2,9 @@
 out vec4 FragColor;
 
 struct Material {
-    sampler2D diffuse; // diffuse map
-    sampler2D specular;
-    sampler2D emissive;
+    sampler2D diffuse0; // diffuse map
+    sampler2D specular0;
+    sampler2D emissive0;
     float shininess;
 };
 

@@ -8,9 +8,9 @@
 class Texture {
 public:
   unsigned int ID;
-  GLenum type;
+  const char *type;
   GLenum slot;
-  Texture(const char *file, GLenum type, GLenum slot, GLenum format,
+  Texture(const char *file, const char *textureType, GLenum slot, GLenum format,
           GLenum pixel_type);
   void TexUnit(Shader &shader, const char *uniform, unsigned int unit);
   void Bind();
