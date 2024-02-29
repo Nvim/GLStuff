@@ -6,6 +6,7 @@ Texture::Texture(const char *file, const char *textureType, GLenum slot,
   stbi_set_flip_vertically_on_load(true);
 
   this->slot = slot;
+  this->type = textureType;
 
   int width, height, nrChannels;
   unsigned char *data = stbi_load(file, &width, &height, &nrChannels, 0);
@@ -30,6 +31,7 @@ Texture::Texture(const char *file, const char *textureType, GLenum slot,
 
   stbi_image_free(data);
   glBindTexture(GL_TEXTURE_2D, 0); // unbind for safety
+  std::cout << "Texture created with type: " << type << std::endl;
 }
 
 void Texture::TexUnit(Shader &shader, const char *uniform, unsigned int unit) {

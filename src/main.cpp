@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
+#include <vector>
 #include "glm/ext/matrix_transform.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include <glm/glm.hpp>
@@ -130,13 +131,10 @@ int main() {
     Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f)},
     Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f,  1.0f,  0.0f)}
   };
-  glm::vec3 pointLightPositions[] = {
-    glm::vec3( 0.7f,  0.2f,  2.0f),
-    glm::vec3( 2.3f, -3.3f, -4.0f),
-    glm::vec3(-4.0f,  2.0f, -12.0f),
-    glm::vec3( 0.0f,  0.0f, -3.0f)
-  };
 
+  unsigned int indicies[] = {
+    1, 2, 3, 4, 1, 3, 4, 9
+  };
   // clang-format on
 
   /* Shader Program: */
@@ -151,32 +149,21 @@ int main() {
               GL_UNSIGNED_BYTE),
       Texture("res/container2_specular.png", "specular", GL_TEXTURE1, GL_RGBA,
               GL_UNSIGNED_BYTE),
-      Texture("res/matrix.jpg", "emissive", GL_TEXTURE2, GL_RGB,
-              GL_UNSIGNED_BYTE) //
+      // Texture("res/matrix.jpg", "emissive", GL_TEXTURE2, GL_RGB,
+      //         GL_UNSIGNED_BYTE) //
   };
 
-  texContainer.TexUnit(litShader, "material.diffuse", 0);
-  texContainer.TexUnit(litShader, "material.specular", 1);
-  texContainer.TexUnit(litShader, "material.emissive", 2);
-  cubeVao.Unbind();
+  std::vector<Texture> tex(std::begin(textures), std::end(textures));
+  std::vector<Vertex> verts(std::begin(vertices), std::end(vertices));
+  std::vector<unsigned int> ind(std::begin(indicies), std::end(indicies));
 
-  lightVao.Bind();
-  lightVao.LinkVBO(vbo, 0, 3, GL_FLOAT, 8 * sizeof(float), (void *)0);
-  lightVao.Unbind();
-
-  /* Transformation Matrices: */
-  glm::mat4 model = glm::mat4(1.0f);
-  glm::mat4 view = glm::mat4(1.0f);
-  glm::mat4 projection = glm::mat4(1.0f);
+  Mesh container = Mesh(verts, ind, tex);
+  Mesh light = Mesh(verts, ind, tex);
 
   float x = lightPos.x;
   float z = lightPos.z;
   /* Game loop: */
   while (!glfwWindowShouldClose(window)) {
-    view = glm::mat4(1.0f);
-    projection = glm::mat4(1.0f);
-    model = glm::mat4(1.0f);
-
     // timing & input:
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -187,90 +174,20 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    projection =
-        glm::perspective(glm::radians(camera.Zoom),
-                         float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f, 100.0f);
-    view = camera.GetViewMatrix();
-
-    /* draw lit cube: */
-    litShader.use();
-    glm::vec3 lightColor = glm::vec3(1.0f);
+    glm::vec3 lightColor(1.0f);
     if (rgbLight) {
       lightColor.x = fmax(sin(glfwGetTime() * 2.0f), 0.1f);
       lightColor.y = fmax(cos(glfwGetTime() * 0.7f), 0.1f);
       lightColor.z = fmax(sin(glfwGetTime() * 1.3f), 0.1f);
     }
-    glm::vec3 diffuseColor = lightColor;
-    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.25f);
 
-    litShader.setVec3("viewPos", camera.Position);
-
-    // material:
-    litShader.setFloat("material.shininess", 64.0f);
-
-    // lights:
-    if (dirLight) {
-      litShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-      litShader.setVec3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-      litShader.setVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-      litShader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-    }
-
+    /* draw lit cube: */
+    container.Draw(litShader, camera, lightColor);
     for (int i = 0; i < 4; i++) {
-      // if (rotateLight) {
-      //   x += 1.0f + sin(time) * 20.0f;
-      //   z += 1.0f + cos(time) * 2.0f;
-      // }
-      litShader.setVec3("pointLights[" + std::to_string(i) + "].ambient",
-                        ambientColor);
-      litShader.setVec3("pointLights[" + std::to_string(i) + "].diffuse",
-                        diffuseColor);
-      litShader.setVec3("pointLights[" + std::to_string(i) + "].specular",
-                        glm::vec3(1.0f, 1.0f, 1.0f));
-      litShader.setVec3("pointLights[" + std::to_string(i) + "].position",
-                        pointLightPositions[i]);
-      litShader.setFloat("pointLights[" + std::to_string(i) + "].constant",
-                         1.0f);
-      litShader.setFloat("pointLights[" + std::to_string(i) + "].linear",
-                         0.09f);
-      litShader.setFloat("pointLights[" + std::to_string(i) + "].quadratic",
-                         0.032f);
-    }
-    // litShader.setFloat("pointLights[" + std::to_string(i) + "].cutoff",
-    //                    glm::cos(glm::radians(12.0f)));
-    // litShader.setFloat("pointLights[" + std::to_string(i) +
-    // "].outerCutoff",
-    //                    glm::cos(glm::radians(17.5f)));
-    // matrices:
-    litShader.setMat4("view", view);
-    litShader.setMat4("projection", projection);
-    if (rotateCube) {
-      model = glm::rotate(model, glm::radians(45.0f) * time,
-                          glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-    litShader.setMat4("model", model);
-
-    texContainer.Bind();
-    texSpecular.Bind();
-    texEmissive.Bind();
-    cubeVao.Bind();
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    /* draw light source: */
-    lightSourceShader.use();
-
-    lightVao.Bind();
-    for (int i = 0; i < 4; i++) {
-      model = glm::mat4(1.0f);
-      // lightPos.z += cos(time) * radius;
-      // model = glm::translate(model, glm::vec3(x, lightPos.y, z));
+      glm::mat4 model = glm::mat4(1.0f);
       model = glm::translate(model, pointLightPositions[i]);
       model = glm::scale(model, glm::vec3(0.2f));
-      lightSourceShader.setMat4("model", model);
-      lightSourceShader.setVec3("lightColor", lightColor);
-      lightSourceShader.setMat4("view", view);
-      lightSourceShader.setMat4("projection", projection);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
+      light.DrawLight(lightSourceShader, camera, model, lightColor);
     }
 
     glfwSwapBuffers(window);
@@ -278,10 +195,6 @@ int main() {
   }
 
   // cleanup:
-  cubeVao.Delete();
-  lightVao.Delete();
-  vbo.Delete();
-  texContainer.Delete();
   // texHuh.Delete();
   litShader.Delete();
   lightSourceShader.Delete();
@@ -355,8 +268,8 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
     firstMouse = false;
   }
 
-  float xOffset = xpos - lastMouseX;
-  float yOffset = lastMouseY - ypos;
+  float xOffset = (xpos - lastMouseX) / 3;
+  float yOffset = (lastMouseY - ypos) / 3;
   lastMouseX = xpos;
   lastMouseY = ypos;
 
