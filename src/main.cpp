@@ -149,8 +149,8 @@ int main() {
               GL_UNSIGNED_BYTE),
       Texture("res/container2_specular.png", "specular", GL_TEXTURE1, GL_RGBA,
               GL_UNSIGNED_BYTE),
-      // Texture("res/matrix.jpg", "emissive", GL_TEXTURE2, GL_RGB,
-      //         GL_UNSIGNED_BYTE) //
+      Texture("res/matrix.jpg", "emissive", GL_TEXTURE2, GL_RGB,
+              GL_UNSIGNED_BYTE) //
   };
 
   std::vector<Texture> tex(std::begin(textures), std::end(textures));
@@ -256,6 +256,14 @@ void processInput(GLFWwindow *window) {
     rgbLight == true ? rgbLight = false : rgbLight = true;
   if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
     dirLight == true ? dirLight = false : dirLight = true;
+  if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    camera.ProcessArrows(DIR_UP, 1.0f);
+  if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    camera.ProcessArrows(DIR_DOWN, 1.0f);
+  if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+    camera.ProcessArrows(DIR_LEFT, 1.0f);
+  if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+    camera.ProcessArrows(DIR_RIGHT, 1.0f);
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
@@ -268,8 +276,8 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
     firstMouse = false;
   }
 
-  float xOffset = (xpos - lastMouseX) / 3;
-  float yOffset = (lastMouseY - ypos) / 3;
+  float xOffset = (xpos - lastMouseX);
+  float yOffset = (lastMouseY - ypos);
   lastMouseX = xpos;
   lastMouseY = ypos;
 

@@ -10,6 +10,7 @@
 // Defines several possible options for camera movement. Used as abstraction to
 // stay away from window-system specific input methods
 enum Camera_Movement { FORWARD, BACKWARD, LEFT, RIGHT };
+enum direction { DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT };
 
 // Default camera values
 const float YAW = -90.0f;
@@ -112,6 +113,32 @@ public:
       if (Pitch < -89.0f)
         Pitch = -89.0f;
     }
+
+    // update Front, Right and Up Vectors using the updated Euler angles
+    updateCameraVectors();
+  }
+
+  void ProcessArrows(GLenum dir, float offset) {
+    switch (dir) {
+    case DIR_UP:
+      Pitch += offset;
+      break;
+    case DIR_DOWN:
+      Pitch -= offset;
+      break;
+    case DIR_RIGHT:
+      Yaw -= offset;
+      break;
+    case DIR_LEFT:
+      Yaw += offset;
+      break;
+    default:
+      break;
+    }
+    if (Pitch > 89.0f)
+      Pitch = 89.0f;
+    if (Pitch < -89.0f)
+      Pitch = -89.0f;
 
     // update Front, Right and Up Vectors using the updated Euler angles
     updateCameraVectors();

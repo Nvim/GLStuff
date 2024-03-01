@@ -7,6 +7,7 @@ Texture::Texture(const char *file, const char *textureType, GLenum slot,
 
   this->slot = slot;
   this->type = textureType;
+  this->path = file;
 
   int width, height, nrChannels;
   unsigned char *data = stbi_load(file, &width, &height, &nrChannels, 0);

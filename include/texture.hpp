@@ -7,9 +7,10 @@
 
 class Texture {
 public:
-  unsigned int ID;
-  const char *type;
-  GLenum slot;
+  unsigned int ID;  // GL object ID
+  const char *type; // diffuse, specular or emissive
+  GLenum slot;      // GL_TEXTURE0 to 15
+  const char *path;
   Texture(const char *file, const char *textureType, GLenum slot, GLenum format,
           GLenum pixel_type);
   void TexUnit(Shader &shader, const char *uniform, unsigned int unit);

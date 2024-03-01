@@ -131,5 +131,11 @@ void main()
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
         color += CalcPointLight(pointLights[i], norm, viewDir, FragPos);
     }
+
+    // emissive lighting:
+    if (texture(material.specular0, TexCoords).r <= 0.01) {
+        color += vec3(texture(material.emissive0, TexCoords));
+    }
+
     FragColor = vec4(color, 1.0);
 }
