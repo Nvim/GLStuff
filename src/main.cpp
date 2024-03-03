@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <filesystem>
 #include <string>
 #include <vector>
 #include "glm/ext/matrix_transform.hpp"
@@ -10,11 +11,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <shader.hpp>
 #include <camera.hpp>
-#include <texture.hpp>
 #include <vao.hpp>
 #include <vbo.hpp>
 #include <ebo.hpp>
 #include <mesh.hpp>
+#include <texture.hpp>
+#include "model.hpp"
 
 // functions:
 GLenum glCheckError_(const char *file, int line);
@@ -139,27 +141,41 @@ int main() {
 
   /* Shader Program: */
   Shader litShader("res/lighting/lit.vert", "res/lighting/litFinal.frag");
-  Shader lightSourceShader("res/lighting/lightSource.vert",
-                           "res/lighting/lightSource.frag");
+  // Shader lightSourceShader("res/lighting/lightSource.vert",
+  //                          "res/lighting/lightSource.frag");
 
   /* Loading textures: */
-  Texture textures[]{
-      //
-      Texture("res/container2.png", "diffuse", GL_TEXTURE0, GL_RGBA,
-              GL_UNSIGNED_BYTE),
-      Texture("res/container2_specular.png", "specular", GL_TEXTURE1, GL_RGBA,
-              GL_UNSIGNED_BYTE),
-      Texture("res/matrix.jpg", "emissive", GL_TEXTURE2, GL_RGB,
-              GL_UNSIGNED_BYTE) //
-  };
+  // Texture textures[]{
+  //     //
+  //     Texture("res/container2.png", "diffuse", GL_TEXTURE0, GL_RGBA,
+  //             GL_UNSIGNED_BYTE),
+  //     Texture("res/container2_specular.png", "specular", GL_TEXTURE1,
+  //     GL_RGBA,
+  //             GL_UNSIGNED_BYTE),
+  //     Texture("res/matrix.jpg", "emissive", GL_TEXTURE2, GL_RGB,
+  //             GL_UNSIGNED_BYTE) //
+  // };
 
-  std::vector<Texture> tex(std::begin(textures), std::end(textures));
-  std::vector<Vertex> verts(std::begin(vertices), std::end(vertices));
-  std::vector<unsigned int> ind(std::begin(indicies), std::end(indicies));
+  // std::vector<Texture> tex(std::begin(textures), std::end(textures));
+  // std::vector<Vertex> verts(std::begin(vertices), std::end(vertices));
+  // std::vector<unsigned int> ind(std::begin(indicies), std::end(indicies));
+  //
+  // Mesh container = Mesh(verts, ind, tex);
+  // Mesh light = Mesh(verts, ind, tex);
+  std::string path("res/backpack/backpack.obj");
+  float t1 = glfwGetTime();
+  Model backpack(path.c_str());
+  float t2 = glfwGetTime();
 
-  Mesh container = Mesh(verts, ind, tex);
-  Mesh light = Mesh(verts, ind, tex);
+  std::cout << "Model loaded in " << t2 - t1 << " s." << std::endl;
 
+  std::cout << "\n--" << backpack.textures_loaded.size()
+            << " cached textures: --" << std::endl;
+  for (auto &tex : backpack.textures_loaded) {
+    std::cout << tex.path << std::endl;
+  }
+
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   float x = lightPos.x;
   float z = lightPos.z;
   /* Game loop: */
@@ -182,13 +198,14 @@ int main() {
     }
 
     /* draw lit cube: */
-    container.Draw(litShader, camera, lightColor);
-    for (int i = 0; i < 4; i++) {
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, pointLightPositions[i]);
-      model = glm::scale(model, glm::vec3(0.2f));
-      light.DrawLight(lightSourceShader, camera, model, lightColor);
-    }
+    // container.Draw(litShader, camera, lightColor);
+    // for (int i = 0; i < 4; i++) {
+    //   glm::mat4 model = glm::mat4(1.0f);
+    //   model = glm::translate(model, pointLightPositions[i]);
+    //   model = glm::scale(model, glm::vec3(0.2f));
+    //   light.DrawLight(lightSourceShader, camera, model, lightColor);
+    // }
+    backpack.Draw(litShader, camera, lightColor);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -197,7 +214,7 @@ int main() {
   // cleanup:
   // texHuh.Delete();
   litShader.Delete();
-  lightSourceShader.Delete();
+  // lightSourceShader.Delete();
   glfwTerminate();
   return 0;
 }

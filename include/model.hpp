@@ -10,13 +10,13 @@
 
 class Model {
 public:
-  Model(char *path);
+  Model(const char *path);
   void Draw(Shader &shader, Camera &camera, glm::vec3 lightColor);
+  std::vector<Texture> textures_loaded;
 
 private:
   std::vector<Mesh> meshes;
   std::string directory;
-  std::vector<Texture> textures_loaded;
 
   void loadModel(std::string path);
   void processNode(aiNode *node, const aiScene *scene);

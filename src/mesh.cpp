@@ -12,7 +12,7 @@ glm::vec3 pointLightPositions[] = {
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
            std::vector<Texture> textures) {
-  std::cout << "Creating mesh object" << std::endl;
+  // std::cout << "Creating mesh object" << std::endl;
   this->vertices = vertices;
   this->indices = indices;
   this->textures = textures;
@@ -20,6 +20,7 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
   vao.Bind();
   VBO vbo(vertices);
   EBO ebo(indices);
+  ebo.Bind();
 
   // position attribute:
   vao.LinkVBO(vbo, 0, 3, GL_FLOAT, sizeof(Vertex), (void *)0);
@@ -37,12 +38,13 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
   vao.Unbind();
   vbo.Unbind();
   ebo.Unbind();
-  std::cout << "Mesh created!" << std::endl;
+  // std::cout << "Mesh created!" << std::endl;
 }
 
 void Mesh::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
   shader.use();
   vao.Bind();
+  // ebo.Bind();
 
   unsigned int numDiffuse = 0;
   unsigned int numSpecular = 0;
@@ -83,8 +85,8 @@ void Mesh::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
 
   // dir light:
   shader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-  shader.setVec3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-  shader.setVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+  shader.setVec3("dirLight.ambient", glm::vec3(1.0f));
+  shader.setVec3("dirLight.diffuse", glm::vec3(1.0f));
   shader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
   // point lights
@@ -108,8 +110,9 @@ void Mesh::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
     shader.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09f);
     shader.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.032f);
   }
-  // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-  glDrawArrays(GL_TRIANGLES, 0, 36);
+  // std::cout << "Draw Call!" << std::endl;
+  glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+  // glDrawArrays(GL_TRIANGLES, 0, 36);
   vao.Unbind();
 }
 

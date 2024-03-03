@@ -11,6 +11,8 @@ void Model::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
   }
 }
 
+Model::Model(const char *path) { loadModel(path); }
+
 void Model::loadModel(std::string path) {
   Assimp::Importer import;
   const aiScene *scene =
@@ -24,6 +26,7 @@ void Model::loadModel(std::string path) {
   directory = path.substr(0, path.find_last_of('/'));
 
   processNode(scene->mRootNode, scene);
+  std::cout << "Model loaded!" << std::endl;
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene) {
@@ -33,8 +36,8 @@ void Model::processNode(aiNode *node, const aiScene *scene) {
     meshes.push_back(processMesh(mesh, scene));
   }
   // then do the same for each of its children
-  for (unsigned int i = 0; i < node->mNumChildren; i++) {
-    processNode(node->mChildren[i], scene);
+  for (unsigned int j = 0; j < node->mNumChildren; j++) {
+    processNode(node->mChildren[j], scene);
   }
 }
 
@@ -85,16 +88,21 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
     // get all diffuse textures and insert them in tex vector with proper names:
-    std::vector<Texture> diffuseMaps = loadMaterialTextures(
-        material, aiTextureType_DIFFUSE, "texture_diffuse");
+    // std::vector<Texture> specularMaps =
+    //     loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
+    // textures.insert(textures.end(), specularMaps.begin(),
+    // specularMaps.end());
+    //
+    std::vector<Texture> diffuseMaps =
+        loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
-    std::vector<Texture> specularMaps = loadMaterialTextures(
-        material, aiTextureType_SPECULAR, "texture_specular");
-    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
     // TODO: Height and NormalMaps
   }
 
+  std::cout << "*********\n\t -- Textures --\n**************" << std::endl;
+  for (auto &tex : textures) {
+    std::cout << tex.path << std::endl;
+  }
   return Mesh(vertices, indices, textures);
 }
 
@@ -104,13 +112,18 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
                                                  std::string typeName) {
   std::vector<Texture> textures;
   for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
-    aiString str;
-    mat->GetTexture(type, i, &str);
+    aiString texName;
+    mat->GetTexture(type, i, &texName);
+    // std::cout << "Texture name: " << texName.C_Str() << std::endl;
     bool skip = false;
+    const char *file = texName.C_Str();
+    std::string filepath = directory + "/" + file;
 
     // check if it's already loaded using path:
     for (unsigned int j = 0; j < textures_loaded.size(); j++) {
-      if (std::strcmp(textures_loaded[j].path, str.C_Str()) == 0) {
+      // std::cout << "Comparing " << textures_loaded[j].path << " with "
+      //           << filepath.c_str() << std::endl;
+      if (std::strcmp(textures_loaded[j].path, filepath.c_str()) == 0) {
         textures.push_back(textures_loaded[j]);
         skip = true;
         break;
@@ -118,20 +131,16 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
     }
 
     if (!skip) {
-      const char *file = str.C_Str();
       const char *textureType = typeName.c_str();
+      const char *texturePath = filepath.c_str();
 
-      std::string imageExtension(str.C_Str(), str.length);
-      GLenum ext;
-      if (imageExtension.substr(imageExtension.length() - 3) == "png") {
-        ext = GL_RGBA;
-      } else {
-        ext = GL_RGB;
-      }
-
-      Texture texture(file, textureType, GL_TEXTURE0 + i, ext,
-                      GL_UNSIGNED_BYTE);
+      Texture texture(texturePath, (textureType + std::to_string(i)).c_str(),
+                      GL_TEXTURE0 + i);
       textures.push_back(texture);
+      // std::cout << "Pushing texture: " << texture.path << std::endl;
+      textures_loaded.push_back(texture);
+      // std::cout << "\t-> Pushed texture: " << textures_loaded.back().path
+      //           << std::endl;
     }
   }
   return textures;

@@ -2,7 +2,7 @@
 out vec4 FragColor;
 
 struct Material {
-    sampler2D diffuse0; // diffuse map
+    sampler2D diffuse0;
     sampler2D specular0;
     sampler2D emissive0;
     float shininess;
@@ -125,17 +125,18 @@ void main()
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 
-    // dir lighting:
+    // dir lighting :
     color = CalcDirLight(dirLight, norm, viewDir);
 
-    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-        color += CalcPointLight(pointLights[i], norm, viewDir, FragPos);
-    }
+    // for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+    //     color += CalcPointLight(pointLights[i], norm, viewDir, FragPos);
+    // }
+    // color = vec3(0.7, 0.2, 0.4);
 
     // emissive lighting:
-    if (texture(material.specular0, TexCoords).r <= 0.01) {
-        color += vec3(texture(material.emissive0, TexCoords));
-    }
+    // if (texture(material.specular0, TexCoords).r <= 0.01) {
+    //     color += vec3(texture(material.emissive0, TexCoords));
+    // }
 
     FragColor = vec4(color, 1.0);
 }
