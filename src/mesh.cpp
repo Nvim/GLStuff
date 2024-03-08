@@ -7,8 +7,8 @@
 #include <iostream>
 
 glm::vec3 pointLightPositions[] = {
-    glm::vec3(0.7f, 0.2f, 2.0f), glm::vec3(2.3f, -3.3f, -4.0f),
-    glm::vec3(-4.0f, 2.0f, -12.0f), glm::vec3(0.0f, 0.0f, -3.0f)};
+    glm::vec3(0.7f, 0.2f, 2.0f) * 3.0f, glm::vec3(2.3f, -3.3f, -4.0f) * 3.0f,
+    glm::vec3(-4.0f, 2.0f, -12.0f) * 3.0f, glm::vec3(0.0f, 0.0f, -3.0f) * 3.0f};
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
            std::vector<Texture> textures) {
@@ -41,7 +41,8 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
   // std::cout << "Mesh created!" << std::endl;
 }
 
-void Mesh::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
+void Mesh::Draw(Shader &shader, Camera &camera, glm::mat4 model,
+                glm::vec3 lightColor, Texture *texture) {
   shader.use();
   vao.Bind();
   // ebo.Bind();
@@ -56,6 +57,7 @@ void Mesh::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
 
     if (type == "diffuse") {
       num = std::to_string(numDiffuse++);
+      std::cout << "diffuse texture added" << std::endl;
     } else if (type == "emissive") {
       num = std::to_string(numEmissive++);
     } else {
@@ -66,7 +68,6 @@ void Mesh::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
     textures[i].Bind();
   }
 
-  glm::mat4 model = glm::mat4(1.0f);
   glm::mat4 view = glm::mat4(1.0f);
   glm::mat4 projection = glm::mat4(1.0f);
   projection =
@@ -81,12 +82,12 @@ void Mesh::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
   shader.setVec3("viewPos", camera.Position);
 
   // material:
-  shader.setFloat("material.shininess", 64.0f);
+  shader.setFloat("material.shininess", 32.0f);
 
   // dir light:
-  shader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-  shader.setVec3("dirLight.ambient", glm::vec3(1.0f));
-  shader.setVec3("dirLight.diffuse", glm::vec3(1.0f));
+  shader.setVec3("dirLight.direction", glm::vec3(0.2f, -1.0f, -0.3f));
+  shader.setVec3("dirLight.ambient", glm::vec3(0.2f));
+  shader.setVec3("dirLight.diffuse", glm::vec3(0.3f));
   shader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
   // point lights

@@ -162,22 +162,22 @@ int main() {
   //
   // Mesh container = Mesh(verts, ind, tex);
   // Mesh light = Mesh(verts, ind, tex);
-  std::string path("res/backpack/backpack.obj");
+  std::string path_backpack("res/backpack/backpack.obj");
+  std::string path_cube("res/cube/cube.obj");
   float t1 = glfwGetTime();
-  Model backpack(path.c_str());
+  Model backpack(path_backpack.c_str());
+  backpack.loadModel(path_backpack.c_str());
   float t2 = glfwGetTime();
 
-  std::cout << "Model loaded in " << t2 - t1 << " s." << std::endl;
+  Model cube(path_cube.c_str());
+  cube.loadModel(path_cube.c_str());
 
-  std::cout << "\n--" << backpack.textures_loaded.size()
-            << " cached textures: --" << std::endl;
-  for (auto &tex : backpack.textures_loaded) {
-    std::cout << tex.path << std::endl;
-  }
+  std::cout << "Model loaded in " << t2 - t1 << " s." << std::endl;
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   float x = lightPos.x;
   float z = lightPos.z;
+  glm::mat4 model = glm::mat4(1.0f);
   /* Game loop: */
   while (!glfwWindowShouldClose(window)) {
     // timing & input:
@@ -197,15 +197,15 @@ int main() {
       lightColor.z = fmax(sin(glfwGetTime() * 1.3f), 0.1f);
     }
 
-    /* draw lit cube: */
-    // container.Draw(litShader, camera, lightColor);
-    // for (int i = 0; i < 4; i++) {
-    //   glm::mat4 model = glm::mat4(1.0f);
-    //   model = glm::translate(model, pointLightPositions[i]);
-    //   model = glm::scale(model, glm::vec3(0.2f));
-    //   light.DrawLight(lightSourceShader, camera, model, lightColor);
-    // }
-    backpack.Draw(litShader, camera, lightColor);
+    model = glm::mat4(1.0f);
+    backpack.Draw(litShader, camera, model, lightColor);
+
+    // draw light sources:
+    for (int i = 0; i < 4; i++) {
+      model = glm::translate(model, pointLightPositions[i]);
+      model = glm::scale(model, glm::vec3(0.2f));
+      cube.Draw(litShader, camera, model, lightColor);
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

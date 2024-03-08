@@ -5,13 +5,14 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-void Model::Draw(Shader &shader, Camera &camera, glm::vec3 lightColor) {
+void Model::Draw(Shader &shader, Camera &camera, glm::mat4 model,
+                 glm::vec3 lightColor, Texture *texture) {
   for (int i = 0; i < meshes.size(); i++) {
-    meshes[i].Draw(shader, camera, lightColor);
+    meshes[i].Draw(shader, camera, model, lightColor, texture);
   }
 }
 
-Model::Model(const char *path) { loadModel(path); }
+Model::Model(const char *path) {}
 
 void Model::loadModel(std::string path) {
   Assimp::Importer import;
@@ -88,10 +89,9 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
     // get all diffuse textures and insert them in tex vector with proper names:
-    // std::vector<Texture> specularMaps =
-    //     loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
-    // textures.insert(textures.end(), specularMaps.begin(),
-    // specularMaps.end());
+    std::vector<Texture> specularMaps =
+        loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
+    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
     //
     std::vector<Texture> diffuseMaps =
         loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
@@ -99,10 +99,11 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     // TODO: Height and NormalMaps
   }
 
-  std::cout << "*********\n\t -- Textures --\n**************" << std::endl;
-  for (auto &tex : textures) {
-    std::cout << tex.path << std::endl;
+  for (auto tex : customTextures) {
+    textures.push_back(tex);
+    std::cout << "loaded a custom texture" << std::endl;
   }
+
   return Mesh(vertices, indices, textures);
 }
 
@@ -111,19 +112,17 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
                                                  aiTextureType type,
                                                  std::string typeName) {
   std::vector<Texture> textures;
-  for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+  unsigned int i;
+  for (i = 0; i < mat->GetTextureCount(type); i++) {
     aiString texName;
     mat->GetTexture(type, i, &texName);
-    // std::cout << "Texture name: " << texName.C_Str() << std::endl;
-    bool skip = false;
-    const char *file = texName.C_Str();
+    std::string file = std::string(texName.data, texName.length);
     std::string filepath = directory + "/" + file;
+    bool skip = false;
 
     // check if it's already loaded using path:
     for (unsigned int j = 0; j < textures_loaded.size(); j++) {
-      // std::cout << "Comparing " << textures_loaded[j].path << " with "
-      //           << filepath.c_str() << std::endl;
-      if (std::strcmp(textures_loaded[j].path, filepath.c_str()) == 0) {
+      if (std::strcmp(textures_loaded[j].path.c_str(), filepath.c_str()) == 0) {
         textures.push_back(textures_loaded[j]);
         skip = true;
         break;
@@ -137,11 +136,9 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
       Texture texture(texturePath, (textureType + std::to_string(i)).c_str(),
                       GL_TEXTURE0 + i);
       textures.push_back(texture);
-      // std::cout << "Pushing texture: " << texture.path << std::endl;
       textures_loaded.push_back(texture);
-      // std::cout << "\t-> Pushed texture: " << textures_loaded.back().path
-      //           << std::endl;
     }
   }
+  numTextures = i;
   return textures;
 }

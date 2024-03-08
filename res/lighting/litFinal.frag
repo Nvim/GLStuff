@@ -54,6 +54,31 @@ uniform Material material;
 uniform DirLight dirLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos);
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos);
+
+void main()
+{
+    vec3 color;
+    vec3 norm = normalize(Normal);
+    vec3 viewDir = normalize(viewPos - FragPos);
+
+    // dir lighting :
+    color = CalcDirLight(dirLight, norm, viewDir);
+
+    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+        color += CalcPointLight(pointLights[i], norm, viewDir, FragPos);
+    }
+
+    // emissive lighting:
+    // if (texture(material.specular0, TexCoords).r <= 0.01) {
+    //     color += vec3(texture(material.emissive0, TexCoords));
+    // }
+
+    FragColor = vec4(color, 1.0);
+}
+
 // doesn't attenuate
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir) {
     vec3 lightDir = normalize(-light.direction);
@@ -117,26 +142,4 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos) {
     vec3 specular = light.specular * spec * vec3(texture(material.specular0, TexCoords)) * attenuation * intensity;
 
     return (ambient + diffuse + specular);
-}
-
-void main()
-{
-    vec3 color;
-    vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
-
-    // dir lighting :
-    color = CalcDirLight(dirLight, norm, viewDir);
-
-    // for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-    //     color += CalcPointLight(pointLights[i], norm, viewDir, FragPos);
-    // }
-    // color = vec3(0.7, 0.2, 0.4);
-
-    // emissive lighting:
-    // if (texture(material.specular0, TexCoords).r <= 0.01) {
-    //     color += vec3(texture(material.emissive0, TexCoords));
-    // }
-
-    FragColor = vec4(color, 1.0);
 }
