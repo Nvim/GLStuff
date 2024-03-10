@@ -1,10 +1,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <filesystem>
 #include <string>
 #include <vector>
 #include "glm/ext/matrix_transform.hpp"
+#include "lightSource.hpp"
+#include "lighting.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -46,6 +47,7 @@ float lastFrame = 0.0f;
 
 /* lighting */
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+std::vector<lightSource> lightSources;
 
 /***********************
  * Main *
@@ -88,80 +90,11 @@ int main() {
     RENDERING !
   */
 
-  // clang-format off
-  Vertex vertices[] = {
-    /* position       */ /* texture */ /* normal */
-    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f),  glm::vec2(0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f)},
-    Vertex{glm::vec3(0.5f, -0.5f, -0.5f),  glm::vec2(1.0f, 0.0f), glm::vec3( 0.0f,  0.0f, -1.0f)}, 
-    Vertex{glm::vec3(0.5f,  0.5f, -0.5f),  glm::vec2(1.0f, 1.0f), glm::vec3( 0.0f,  0.0f, -1.0f)}, 
-    Vertex{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec2( 1.0f, 1.0f),  glm::vec3(0.0f,  0.0f, -1.0f)}, 
-    Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2( 0.0f, 1.0f),  glm::vec3(0.0f,  0.0f, -1.0f)}, 
-    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2( 0.0f, 0.0f),  glm::vec3(0.0f,  0.0f, -1.0f)}, 
-
-    Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2( 0.0f, 0.0f),  glm::vec3(0.0f,  0.0f, 1.0f)},
-    Vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2( 1.0f, 0.0f),  glm::vec3(0.0f,  0.0f, 1.0f)},
-    Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2( 1.0f, 1.0f),  glm::vec3(0.0f,  0.0f, 1.0f)},
-    Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2( 1.0f, 1.0f),  glm::vec3(0.0f,  0.0f, 1.0f)},
-    Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2( 0.0f, 1.0f),  glm::vec3(0.0f,  0.0f, 1.0f)},
-    Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2( 0.0f, 0.0f),  glm::vec3(0.0f,  0.0f, 1.0f)},
-
-    Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(-1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(-1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(-1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f)},
-
-    Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f)},
-
-    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f, -0.5f, -0.5f ), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f, -0.5f,  0.5f ), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f, -0.5f,  0.5f ), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, -1.0f,  0.0f)},
-
-    Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f,  1.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f,  0.5f, -0.5f ), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f,  1.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f,  0.5f,  0.5f ), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f)},
-    Vertex{glm::vec3(0.5f,  0.5f,  0.5f ), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f)},
-    Vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f,  1.0f,  0.0f)}
-  };
-
-  unsigned int indicies[] = {
-    1, 2, 3, 4, 1, 3, 4, 9
-  };
-  // clang-format on
-
   /* Shader Program: */
   Shader litShader("res/lighting/lit.vert", "res/lighting/litFinal.frag");
-  // Shader lightSourceShader("res/lighting/lightSource.vert",
-  //                          "res/lighting/lightSource.frag");
+  Shader lightSourceShader("res/lighting/lightSource.vert",
+                           "res/lighting/lightSource.frag");
 
-  /* Loading textures: */
-  // Texture textures[]{
-  //     //
-  //     Texture("res/container2.png", "diffuse", GL_TEXTURE0, GL_RGBA,
-  //             GL_UNSIGNED_BYTE),
-  //     Texture("res/container2_specular.png", "specular", GL_TEXTURE1,
-  //     GL_RGBA,
-  //             GL_UNSIGNED_BYTE),
-  //     Texture("res/matrix.jpg", "emissive", GL_TEXTURE2, GL_RGB,
-  //             GL_UNSIGNED_BYTE) //
-  // };
-
-  // std::vector<Texture> tex(std::begin(textures), std::end(textures));
-  // std::vector<Vertex> verts(std::begin(vertices), std::end(vertices));
-  // std::vector<unsigned int> ind(std::begin(indicies), std::end(indicies));
-  //
-  // Mesh container = Mesh(verts, ind, tex);
-  // Mesh light = Mesh(verts, ind, tex);
   std::string path_backpack("res/backpack/backpack.obj");
   std::string path_cube("res/cube/cube.obj");
   float t1 = glfwGetTime();
@@ -175,11 +108,28 @@ int main() {
   std::cout << "Model loaded in " << t2 - t1 << " s." << std::endl;
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  float x = lightPos.x;
-  float z = lightPos.z;
   glm::mat4 model = glm::mat4(1.0f);
+
+  s_lightSettings defaultLightSettings;
+  defaultLightSettings.ambient = glm::vec3(0.1f, 0.25f, 0.2f);
+  defaultLightSettings.diffuse = glm::vec3(0.2f, 0.5f, 0.4f);
+  defaultLightSettings.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+  defaultLightSettings.constant = 1.0f;
+  defaultLightSettings.linear = 0.007f;
+  defaultLightSettings.quadratic = 0.0002f;
+
+  for (int i = 0; i < 4; i++) {
+    lightSources.push_back(
+        lightSource("res/backpack/backpack.obj", defaultLightSettings));
+  }
+
+  /* ***************************************************************** */
   /* Game loop: */
+  /* ***************************************************************** */
+
   while (!glfwWindowShouldClose(window)) {
+    float x = lightPos.x;
+    float z = lightPos.z;
     // timing & input:
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
@@ -190,21 +140,37 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::vec3 lightColor(1.0f);
-    if (rgbLight) {
-      lightColor.x = fmax(sin(glfwGetTime() * 2.0f), 0.1f);
-      lightColor.y = fmax(cos(glfwGetTime() * 0.7f), 0.1f);
-      lightColor.z = fmax(sin(glfwGetTime() * 1.3f), 0.1f);
+    pointLightPositions[0] = glm::vec3(-5, 5, -5);
+    if (rotateLight) {
+      x += 1.0f + sin(time) * 15.0f;
+      z += 1.0f + cos(time) * 15.0f;
+      pointLightPositions[0] = glm::vec3(x, lightPos.y, z);
     }
 
-    model = glm::mat4(1.0f);
-    backpack.Draw(litShader, camera, model, lightColor);
+    // glm::vec3 lightColor(1.0f);
+    // if (rgbLight) {
+    //   lightColor.x = fmax(sin(glfwGetTime() * 2.0f), 0.1f);
+    //   lightColor.y = fmax(cos(glfwGetTime() * 0.7f), 0.1f);
+    //   lightColor.z = fmax(sin(glfwGetTime() * 1.3f), 0.1f);
+    // }
 
-    // draw light sources:
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, -10.0f));
+    if (rotateCube) {
+      model = glm::rotate(model, glm::radians(45.0f) * time,
+                          glm::vec3(0.0f, 1.0f, 0.0f));
+      defaultLightSettings.diffuse.x = fmax(sin(glfwGetTime() * 2.0f), 0.1f);
+      for (auto source : lightSources) {
+        source.setLightSettings(defaultLightSettings);
+      }
+    }
+    backpack.Draw(litShader, camera, model);
+
     for (int i = 0; i < 4; i++) {
+      model = glm::mat4(1.0f);
       model = glm::translate(model, pointLightPositions[i]);
-      model = glm::scale(model, glm::vec3(0.2f));
-      cube.Draw(litShader, camera, model, lightColor);
+      model = glm::scale(model, glm::vec3(0.6f));
+      cube.Draw(lightSourceShader, camera, model);
     }
 
     glfwSwapBuffers(window);
@@ -214,7 +180,7 @@ int main() {
   // cleanup:
   // texHuh.Delete();
   litShader.Delete();
-  // lightSourceShader.Delete();
+  lightSourceShader.Delete();
   glfwTerminate();
   return 0;
 }

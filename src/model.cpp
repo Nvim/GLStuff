@@ -6,9 +6,9 @@
 #include <assimp/postprocess.h>
 
 void Model::Draw(Shader &shader, Camera &camera, glm::mat4 model,
-                 glm::vec3 lightColor, Texture *texture) {
+                 Texture *texture) {
   for (int i = 0; i < meshes.size(); i++) {
-    meshes[i].Draw(shader, camera, model, lightColor, texture);
+    meshes[i].Draw(shader, camera, model, texture);
   }
 }
 

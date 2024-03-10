@@ -1,14 +1,11 @@
 #include "mesh.hpp"
-#include "glm/gtc/type_ptr.hpp"
+#include "lightSource.hpp"
 #include <cstddef>
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 
 glm::vec3 pointLightPositions[] = {
-    glm::vec3(0.7f, 0.2f, 2.0f) * 3.0f, glm::vec3(2.3f, -3.3f, -4.0f) * 3.0f,
-    glm::vec3(-4.0f, 2.0f, -12.0f) * 3.0f, glm::vec3(0.0f, 0.0f, -3.0f) * 3.0f};
+    glm::vec3(4.7f, 4.2f, 6.0f), glm::vec3(-2.3f, -3.3f, -7.0f),
+    glm::vec3(-8.0f, 2.0f, -12.0f), glm::vec3(5.0f, 0.0f, -9.0f)};
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
            std::vector<Texture> textures) {
@@ -42,10 +39,9 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
 }
 
 void Mesh::Draw(Shader &shader, Camera &camera, glm::mat4 model,
-                glm::vec3 lightColor, Texture *texture) {
+                Texture *texture) {
   shader.use();
   vao.Bind();
-  // ebo.Bind();
 
   unsigned int numDiffuse = 0;
   unsigned int numSpecular = 0;
@@ -57,7 +53,6 @@ void Mesh::Draw(Shader &shader, Camera &camera, glm::mat4 model,
 
     if (type == "diffuse") {
       num = std::to_string(numDiffuse++);
-      std::cout << "diffuse texture added" << std::endl;
     } else if (type == "emissive") {
       num = std::to_string(numEmissive++);
     } else {
@@ -91,46 +86,27 @@ void Mesh::Draw(Shader &shader, Camera &camera, glm::mat4 model,
   shader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
   // point lights
-  glm::vec3 diffuseColor = lightColor;
-  glm::vec3 ambientColor = diffuseColor * glm::vec3(0.25f);
-
   for (int i = 0; i < 4; i++) {
     // if (rotateLight) {
     //   x += 1.0f + sin(time) * 20.0f;
     //   z += 1.0f + cos(time) * 2.0f;
     // }
     shader.setVec3("pointLights[" + std::to_string(i) + "].ambient",
-                   ambientColor);
+                   lightSources[i].lightSettings.ambient);
     shader.setVec3("pointLights[" + std::to_string(i) + "].diffuse",
-                   diffuseColor);
+                   lightSources[i].lightSettings.diffuse);
     shader.setVec3("pointLights[" + std::to_string(i) + "].specular",
-                   glm::vec3(1.0f, 1.0f, 1.0f));
+                   lightSources[i].lightSettings.specular);
     shader.setVec3("pointLights[" + std::to_string(i) + "].position",
                    pointLightPositions[i]);
-    shader.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0f);
-    shader.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09f);
-    shader.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.032f);
+    shader.setFloat("pointLights[" + std::to_string(i) + "].constant",
+                    lightSources[i].lightSettings.constant);
+    shader.setFloat("pointLights[" + std::to_string(i) + "].linear",
+                    lightSources[i].lightSettings.linear);
+    shader.setFloat("pointLights[" + std::to_string(i) + "].quadratic",
+                    lightSources[i].lightSettings.quadratic);
   }
-  // std::cout << "Draw Call!" << std::endl;
   glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
   // glDrawArrays(GL_TRIANGLES, 0, 36);
-  vao.Unbind();
-}
-
-void Mesh::DrawLight(Shader &shader, Camera &camera, glm::mat4 model,
-                     glm::vec3 lightColor) {
-  shader.use();
-  vao.Bind();
-  glm::mat4 projection =
-      glm::perspective(glm::radians(camera.Zoom),
-                       float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f, 100.0f);
-  glm::mat4 view = camera.GetViewMatrix();
-  // lightPos.z += cos(time) * radius;
-  // model = glm::translate(model, glm::vec3(x, lightPos.y, z));
-  shader.setMat4("model", model);
-  shader.setMat4("view", view);
-  shader.setMat4("projection", projection);
-  shader.setVec3("lightColor", lightColor);
-  glDrawArrays(GL_TRIANGLES, 0, 36);
   vao.Unbind();
 }

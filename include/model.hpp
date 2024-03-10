@@ -7,13 +7,14 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <shader.hpp>
 #include <mesh.hpp>
+#include <lighting.hpp>
 
 class Model {
 public:
   int numTextures = 0; // to know which slot to add an external tex
   Model(const char *path);
-  void Draw(Shader &shader, Camera &camera, glm::mat4 model,
-            glm::vec3 lightColor, Texture *texture = nullptr);
+  virtual void Draw(Shader &shader, Camera &camera, glm::mat4 model,
+                    Texture *texture = nullptr);
   std::vector<Texture> textures_loaded;
   std::vector<Texture> customTextures;
 
