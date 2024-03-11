@@ -6,6 +6,7 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "lightSource.hpp"
 #include "lighting.hpp"
+#include "scene.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,19 +28,18 @@ unsigned int load_texture(const char *file, const unsigned short jpg);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, Scene &scene);
 
 /* Settings: */
 bool rotateCube = false;
 bool rotateLight = false;
 bool rgbLight = false;
-bool dirLight = false;
-
-/* Camera: */
-Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
 float lastMouseX = SCR_WIDTH / 2.0f;
 float lastMouseY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+
+/* Camera: */
+Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
 
 /* Timing: */
 float deltaTime = 0.0f;
@@ -47,7 +47,6 @@ float lastFrame = 0.0f;
 
 /* lighting */
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-std::vector<lightSource> lightSources;
 
 /***********************
  * Main *
@@ -123,6 +122,14 @@ int main() {
         lightSource("res/backpack/backpack.obj", defaultLightSettings));
   }
 
+  std::vector<Model> models;
+  models.reserve(2);
+  models.push_back(backpack);
+  models.push_back(cube);
+
+  Scene scene(models, lightSources);
+  scene.setBgColor(glm::vec3(0.0f, 0.1f, 0.24f));
+
   /* ***************************************************************** */
   /* Game loop: */
   /* ***************************************************************** */
@@ -135,17 +142,17 @@ int main() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
     float time = (float)glfwGetTime();
-    processInput(window);
+    processInput(window, scene);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(scene.bgColor.x, scene.bgColor.y, scene.bgColor.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     pointLightPositions[0] = glm::vec3(-5, 5, -5);
-    if (rotateLight) {
-      x += 1.0f + sin(time) * 15.0f;
-      z += 1.0f + cos(time) * 15.0f;
-      pointLightPositions[0] = glm::vec3(x, lightPos.y, z);
-    }
+    // if (rotateLight) {
+    //   x += 1.0f + sin(time) * 15.0f;
+    //   z += 1.0f + cos(time) * 15.0f;
+    //   pointLightPositions[0] = glm::vec3(x, lightPos.y, z);
+    // }
 
     // glm::vec3 lightColor(1.0f);
     // if (rgbLight) {
@@ -218,7 +225,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window) {
+void prcessInput(GLFWwindow *window, Scene &scene) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -238,7 +245,7 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
     rgbLight == true ? rgbLight = false : rgbLight = true;
   if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-    dirLight == true ? dirLight = false : dirLight = true;
+    scene.dirLight == true ? scene.dirLight = false : scene.dirLight = true;
   if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     camera.ProcessArrows(DIR_UP, 1.0f);
   if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)

@@ -39,7 +39,7 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
 }
 
 void Mesh::Draw(Shader &shader, Camera &camera, glm::mat4 model,
-                Texture *texture) {
+                Texture *texture, Scene &scene) {
   shader.use();
   vao.Bind();
 
@@ -92,19 +92,19 @@ void Mesh::Draw(Shader &shader, Camera &camera, glm::mat4 model,
     //   z += 1.0f + cos(time) * 2.0f;
     // }
     shader.setVec3("pointLights[" + std::to_string(i) + "].ambient",
-                   lightSources[i].lightSettings.ambient);
+                   scene.lights[i].lightSettings.ambient);
     shader.setVec3("pointLights[" + std::to_string(i) + "].diffuse",
-                   lightSources[i].lightSettings.diffuse);
+                   scene.lights[i].lightSettings.diffuse);
     shader.setVec3("pointLights[" + std::to_string(i) + "].specular",
-                   lightSources[i].lightSettings.specular);
+                   scene.lights[i].lightSettings.specular);
     shader.setVec3("pointLights[" + std::to_string(i) + "].position",
                    pointLightPositions[i]);
     shader.setFloat("pointLights[" + std::to_string(i) + "].constant",
-                    lightSources[i].lightSettings.constant);
+                    scene.lights[i].lightSettings.constant);
     shader.setFloat("pointLights[" + std::to_string(i) + "].linear",
-                    lightSources[i].lightSettings.linear);
+                    scene.lights[i].lightSettings.linear);
     shader.setFloat("pointLights[" + std::to_string(i) + "].quadratic",
-                    lightSources[i].lightSettings.quadratic);
+                    scene.lights[i].lightSettings.quadratic);
   }
   glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
   // glDrawArrays(GL_TRIANGLES, 0, 36);

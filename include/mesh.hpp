@@ -1,6 +1,7 @@
 #pragma once
 
 #include "camera.hpp"
+#include "scene.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
 #include "vao.hpp"
@@ -23,5 +24,5 @@ public:
   Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
        std::vector<Texture> textures);
   void Draw(Shader &shader, Camera &camera, glm::mat4 model,
-            Texture *texture = nullptr);
+            Texture *texture = nullptr, Scene &scene);
 };

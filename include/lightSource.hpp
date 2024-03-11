@@ -14,5 +14,3 @@ public:
 
   void setLightSettings(s_lightSettings &light);
 };
-
-extern std::vector<lightSource> lightSources;
