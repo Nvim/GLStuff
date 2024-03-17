@@ -6,15 +6,19 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <shader.hpp>
-#include <mesh.hpp>
-#include <lighting.hpp>
+#include "IDrawStrategy.hpp"
+#include "RenderContext.hpp"
+#include "mesh.hpp"
 
 class Model {
 public:
   int numTextures = 0; // to know which slot to add an external tex
+  IDrawStrategy DrawStrategy;
   Model(const char *path);
-  virtual void Draw(Shader &shader, Camera &camera, glm::mat4 model,
-                    Texture *texture = nullptr);
+  // virtual void Draw(Shader &shader, Camera &camera, glm::mat4 model,
+  //                   Texture *texture = nullptr);
+  void setStrategy(IDrawStrategy &strategy);
+  void Draw(RenderContext &context);
   std::vector<Texture> textures_loaded;
   std::vector<Texture> customTextures;
 

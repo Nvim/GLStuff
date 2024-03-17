@@ -34,12 +34,9 @@ void processInput(GLFWwindow *window, Scene &scene);
 bool rotateCube = false;
 bool rotateLight = false;
 bool rgbLight = false;
-float lastMouseX = SCR_WIDTH / 2.0f;
-float lastMouseY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
 
 /* Camera: */
-Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
+// Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
 
 /* Timing: */
 float deltaTime = 0.0f;
@@ -117,6 +114,7 @@ int main() {
   defaultLightSettings.linear = 0.007f;
   defaultLightSettings.quadratic = 0.0002f;
 
+  std::vector<lightSource> lightSources;
   for (int i = 0; i < 4; i++) {
     lightSources.push_back(
         lightSource("res/backpack/backpack.obj", defaultLightSettings));
@@ -129,6 +127,7 @@ int main() {
 
   Scene scene(models, lightSources);
   scene.setBgColor(glm::vec3(0.0f, 0.1f, 0.24f));
+  glfwSetWindowUserPointer(window, &scene);
 
   /* ***************************************************************** */
   /* Game loop: */
@@ -225,17 +224,17 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-void prcessInput(GLFWwindow *window, Scene &scene) {
+void processInput(GLFWwindow *window, Scene &scene) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    camera.ProcessKeyboard(FORWARD, deltaTime);
+    scene.camera.ProcessKeyboard(FORWARD, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    camera.ProcessKeyboard(BACKWARD, deltaTime);
+    scene.camera.ProcessKeyboard(BACKWARD, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    camera.ProcessKeyboard(LEFT, deltaTime);
+    scene.camera.ProcessKeyboard(LEFT, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    camera.ProcessKeyboard(RIGHT, deltaTime);
+    scene.camera.ProcessKeyboard(RIGHT, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     glfwSetCursorPosCallback(window, mouse_callback);
   if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
@@ -247,33 +246,35 @@ void prcessInput(GLFWwindow *window, Scene &scene) {
   if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
     scene.dirLight == true ? scene.dirLight = false : scene.dirLight = true;
   if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    camera.ProcessArrows(DIR_UP, 1.0f);
+    scene.camera.ProcessArrows(DIR_UP, 1.0f);
   if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    camera.ProcessArrows(DIR_DOWN, 1.0f);
+    scene.camera.ProcessArrows(DIR_DOWN, 1.0f);
   if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-    camera.ProcessArrows(DIR_LEFT, 1.0f);
+    scene.camera.ProcessArrows(DIR_LEFT, 1.0f);
   if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    camera.ProcessArrows(DIR_RIGHT, 1.0f);
+    scene.camera.ProcessArrows(DIR_RIGHT, 1.0f);
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
+  Scene *scene = (Scene *)glfwGetWindowUserPointer(window);
   float xpos = static_cast<float>(xposIn);
   float ypos = static_cast<float>(yposIn);
-  if (firstMouse) // initially set to true
+  if (scene->firstMouse) // initially set to true
   {
-    lastMouseX = xpos;
-    lastMouseY = ypos;
-    firstMouse = false;
+    scene->lastMouseX = xpos;
+    scene->lastMouseY = ypos;
+    scene->firstMouse = false;
   }
 
-  float xOffset = (xpos - lastMouseX);
-  float yOffset = (lastMouseY - ypos);
-  lastMouseX = xpos;
-  lastMouseY = ypos;
+  float xOffset = (xpos - scene->lastMouseX);
+  float yOffset = (scene->lastMouseY - ypos);
+  scene->lastMouseX = xpos;
+  scene->lastMouseY = ypos;
 
-  camera.ProcessMouseMovement(xOffset, yOffset);
+  scene->camera.ProcessMouseMovement(xOffset, yOffset);
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-  camera.ProcessMouseScroll(static_cast<float>(yoffset));
+  Scene *scene = (Scene *)glfwGetWindowUserPointer(window);
+  scene->camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }

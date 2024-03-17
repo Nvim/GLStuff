@@ -1,14 +1,12 @@
 #include <assimp/material.h>
 #include <model.hpp>
-#include <mesh.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-void Model::Draw(Shader &shader, Camera &camera, glm::mat4 model,
-                 Texture *texture) {
-  for (int i = 0; i < meshes.size(); i++) {
-    meshes[i].Draw(shader, camera, model, texture);
+void Model::Draw(RenderContext &context) {
+  for (const mesh &m : meshes) {
+    DrawStrategy.Draw(context, m);
   }
 }
 
