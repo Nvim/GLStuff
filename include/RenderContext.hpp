@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "LightSource.hpp"
 #include "camera.hpp"
 // #include "lightSource.hpp"
 // #include "model.hpp"
@@ -11,32 +12,29 @@
 class RenderContext {
 private:
   Camera camera;
-  // std::vector<Model> models;
   s_MouseInput mouse;
   s_Matrices matrices;
   glm::vec3 bgColor;
   Shader shader;
-  Texture texture;
-  // std::vector<lightSource> lights;
+  // Texture texture;
+  std::vector<LightSource *> lightSources;
 
 public:
-  RenderContext();
+  RenderContext(Shader &sha);
 
   void setCamera(Camera &camera);
-  // void setModels(std::vector<Model> &models);
-  // void setLights(std::vector<lightSource> &lights);
   void setMouseInput(s_MouseInput &mouse);
   void setMatrices(s_Matrices &matrices);
   void setBgColor(glm::vec3 bgColor);
   void setShader(Shader &shader);
-  void setTexture(Texture &texture);
+  // void setTexture(Texture &texture);
+  void setLightSources(std::vector<LightSource *> lightSrcs);
 
   Camera getCamera();
-  // std::vector<Model> getModels();
-  // std::vector<lightSource> getLights();
   s_MouseInput getMouseInput();
   s_Matrices getMatrices();
   glm::vec3 getBgColor();
   Shader getShader();
-  Texture getTexture();
+  // Texture getTexture();
+  std::vector<LightSource *> getLightSources();
 };

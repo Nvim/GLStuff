@@ -1,7 +1,7 @@
 #include "mesh.hpp"
+#include "ebo.hpp"
 // #include "lightSource.hpp"
 #include <cstddef>
-#include <string>
 
 glm::vec3 pointLightPositions[] = {
     glm::vec3(4.7f, 4.2f, 6.0f), glm::vec3(-2.3f, -3.3f, -7.0f),

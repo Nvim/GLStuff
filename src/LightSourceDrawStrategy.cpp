@@ -1,6 +1,6 @@
-#include <DefaultDrawStrategy.hpp>
+#include <LightSourceDrawStrategy.hpp>
 
-void DefaultDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
+void LightSourceDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
 
   Shader shader = context.getShader();
   VAO vao = mesh.vao;
@@ -60,11 +60,11 @@ void DefaultDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
   vao.Unbind();
 }
 
-void DefaultDrawStrategy::bindTextures(Shader &shader,
-                                       std::vector<Texture> textures,
-                                       unsigned int &numDiffuse,
-                                       unsigned int &numSpecular,
-                                       unsigned int &numEmissive) {
+void LightSourceDrawStrategy::bindTextures(Shader &shader,
+                                           std::vector<Texture> textures,
+                                           unsigned int &numDiffuse,
+                                           unsigned int &numSpecular,
+                                           unsigned int &numEmissive) {
 
   for (unsigned int i = 0; i < textures.size(); i++) {
     std::string num;

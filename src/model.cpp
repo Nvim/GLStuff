@@ -3,16 +3,28 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <iostream>
 
 void Model::Draw(RenderContext &context) {
-  for (const mesh &m : meshes) {
-    DrawStrategy.Draw(context, m);
+  for (Mesh &m : meshes) {
+    DrawStrategy->Draw(context, m);
   }
 }
 
-Model::Model(const char *path) {}
+Model::Model(const char *path) { this->path = path; }
 
-void Model::loadModel(std::string path) {
+void Model::loadModelVerbose() {
+  float t1 = glfwGetTime();
+  loadModel();
+  float t2 = glfwGetTime();
+  std::cout << "Model loaded in " << t2 - t1 << " secs" << std::endl;
+}
+
+void Model::setLightSourcesList(std::vector<LightSource *> lightSrcs) {
+  this->lightSources = lightSrcs;
+}
+
+void Model::loadModel() {
   Assimp::Importer import;
   const aiScene *scene =
       import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -137,6 +149,6 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
       textures_loaded.push_back(texture);
     }
   }
-  numTextures = i;
+  // numTextures = i;
   return textures;
 }

@@ -1,14 +1,15 @@
 #pragma once
 
-#include "RenderContext.hpp"
-#include "mesh.hpp"
+#include "texture.hpp"
+#include <IDrawStrategy.hpp>
+#include <LightSource.hpp>
+#include <vector>
 
-class IDrawStrategy {
+class DefaultDrawStrategy : public IDrawStrategy {
 public:
-  virtual ~IDrawStrategy() {}
-  virtual void Draw(RenderContext &context, Mesh &mesh) = 0;
+  void Draw(RenderContext &context, Mesh &mesh) override;
 
-protected:
+private:
   void bindTextures(Shader &shader, std::vector<Texture> textures,
                     unsigned int &numDiffuse, unsigned int &numSpecular,
                     unsigned int &numEmissive);

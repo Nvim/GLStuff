@@ -1,17 +1,11 @@
 #pragma once
 
-#include "camera.hpp"
-#include "shader.hpp"
 #include "texture.hpp"
 #include "vao.hpp"
-#include "ebo.hpp"
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <lighting.hpp>
-
-extern glm::vec3 pointLightPositions[];
 
 class Mesh {
 public:
