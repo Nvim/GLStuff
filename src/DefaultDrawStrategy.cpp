@@ -1,4 +1,6 @@
 #include <DefaultDrawStrategy.hpp>
+#include <iostream>
+#include <ostream>
 
 void DefaultDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
 
@@ -16,14 +18,6 @@ void DefaultDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
 
   bindTextures(shader, textures, numDiffuse, numSpecular, numEmissive);
 
-  // glm::mat4 view = glm::mat4(1.0f);
-  // glm::mat4 projection = glm::mat4(1.0f);
-  // projection =
-  //     glm::perspective(glm::radians(camera.Zoom),
-  //                      float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f,
-  //                      100.0f);
-  // view = camera.GetViewMatrix();
-
   // matrices:
   shader.setMat4("model", context.getMatrices().model);
   shader.setMat4("view", context.getMatrices().view);
@@ -40,6 +34,7 @@ void DefaultDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
   shader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 
   // point lights
+  shader.setInt("pointLightsCount", lights.size());
   for (int i = 0; i < lights.size(); i++) {
     s_LightSettings ls = lights[i]->getLightSettings();
     shader.setVec3("pointLights[" + std::to_string(i) + "].ambient",

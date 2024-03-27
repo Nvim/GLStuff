@@ -8,6 +8,7 @@
 
 class LightSourceDrawStrategy : public IDrawStrategy {
 public:
+  LightSourceDrawStrategy(s_LightSettings lightSettings);
   void Draw(RenderContext &context, Mesh &mesh) override;
   void getLightSettings();
 

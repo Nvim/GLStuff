@@ -1,6 +1,8 @@
 #include <Scene.hpp>
 #include <LightSource.hpp>
 
+void Scene::addModel(Model *model) { models.push_back(model); }
+
 void Scene::addLightSource(LightSource *lightSource) {
   lightSourcesList.push_back(lightSource);
   lightSource->RegisterObserver(this);

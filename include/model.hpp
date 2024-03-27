@@ -21,8 +21,14 @@ public:
   void loadModelVerbose();
   void setDrawStrategy(IDrawStrategy &strategy);
   void setLightSourcesList(std::vector<LightSource *>);
+  std::vector<LightSource *> getLightSourcesList();
+  const glm::mat4 &getModelMatrix() const;
+  void rotate(float angle, const glm::vec3 &axis);
+  void translate(const glm::vec3 &translation);
+  void scale(const glm::vec3 &scale);
 
 private:
+  glm::mat4 modelMatrix;
   IDrawStrategy *DrawStrategy;
   std::string path;
   std::string directory;
@@ -30,7 +36,7 @@ private:
   std::vector<Texture> textures_loaded;
   std::vector<Texture> customTextures;
   std::vector<LightSource *> lightSources;
-
+  //
   void processNode(aiNode *node, const aiScene *scene);
   Mesh processMesh(aiMesh *mesh, const aiScene *scene);
   std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,

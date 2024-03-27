@@ -1,5 +1,10 @@
 #include <LightSourceDrawStrategy.hpp>
 
+LightSourceDrawStrategy::LightSourceDrawStrategy(
+    s_LightSettings lightSettings) {
+  this->lightSettings = lightSettings;
+} // default()
+
 void LightSourceDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
 
   Shader shader = context.getShader();

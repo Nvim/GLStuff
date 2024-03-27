@@ -11,6 +11,7 @@ private:
   std::vector<IObserver *> observers;
 
 public:
+  LightSource(s_LightSettings lightSettings);
   void setLightSettings(s_LightSettings &light);
   s_LightSettings getLightSettings();
 

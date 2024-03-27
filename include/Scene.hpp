@@ -11,6 +11,7 @@ private:
   std::vector<Model *> models;
 
 public:
+  void addModel(Model *model);
   void addLightSource(LightSource *lightSource);
   void removeLightSource(LightSource *lightSrc);
   void Update(LightSource *lightSource) override;

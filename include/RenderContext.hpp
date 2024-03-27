@@ -25,16 +25,17 @@ public:
   void setCamera(Camera &camera);
   void setMouseInput(s_MouseInput &mouse);
   void setMatrices(s_Matrices &matrices);
+  void setModelMatrix(glm::mat4 &modelMatrix);
   void setBgColor(glm::vec3 bgColor);
   void setShader(Shader &shader);
   // void setTexture(Texture &texture);
-  void setLightSources(std::vector<LightSource *> lightSrcs);
+  void setLightSources(std::vector<LightSource *> &lightSrcs);
 
-  Camera getCamera();
-  s_MouseInput getMouseInput();
-  s_Matrices getMatrices();
-  glm::vec3 getBgColor();
-  Shader getShader();
+  Camera &getCamera();
+  s_MouseInput &getMouseInput();
+  s_Matrices &getMatrices();
+  glm::vec3 &getBgColor();
+  Shader &getShader();
   // Texture getTexture();
-  std::vector<LightSource *> getLightSources();
+  std::vector<LightSource *> &getLightSources();
 };

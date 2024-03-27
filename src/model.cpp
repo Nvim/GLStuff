@@ -1,3 +1,4 @@
+#include "LightSourceDrawStrategy.hpp"
 #include <assimp/material.h>
 #include <model.hpp>
 #include <assimp/Importer.hpp>
@@ -5,13 +6,14 @@
 #include <assimp/postprocess.h>
 #include <iostream>
 
+Model::Model(const char *path) : modelMatrix(1.0f) { this->path = path; }
+
 void Model::Draw(RenderContext &context) {
+  context.setModelMatrix(modelMatrix);
   for (Mesh &m : meshes) {
     DrawStrategy->Draw(context, m);
   }
 }
-
-Model::Model(const char *path) { this->path = path; }
 
 void Model::loadModelVerbose() {
   float t1 = glfwGetTime();
@@ -22,6 +24,19 @@ void Model::loadModelVerbose() {
 
 void Model::setLightSourcesList(std::vector<LightSource *> lightSrcs) {
   this->lightSources = lightSrcs;
+}
+
+std::vector<LightSource *> Model::getLightSourcesList() {
+  return this->lightSources;
+}
+
+void Model::setDrawStrategy(IDrawStrategy &strategy) {
+  this->DrawStrategy = &strategy;
+}
+
+void Model::setAsLightSource(s_LightSettings lightSettings) {
+  // setDrawStrategy(new LightSourceDrawStrategy(lightSettings));
+  this->DrawStrategy = new LightSourceDrawStrategy(lightSettings);
 }
 
 void Model::loadModel() {
@@ -151,4 +166,18 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
   }
   // numTextures = i;
   return textures;
+}
+
+const glm::mat4 &Model::getModelMatrix() const { return modelMatrix; }
+
+void Model::rotate(float angle, const glm::vec3 &axis) {
+  modelMatrix = glm::rotate(modelMatrix, glm::radians(angle), axis);
+}
+
+void Model::translate(const glm::vec3 &translation) {
+  modelMatrix = glm::translate(modelMatrix, translation);
+}
+
+void Model::scale(const glm::vec3 &scale) {
+  modelMatrix = glm::scale(modelMatrix, scale);
 }

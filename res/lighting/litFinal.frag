@@ -42,7 +42,7 @@ struct SpotLight {
     float quadratic;
 };
 
-#define NR_POINT_LIGHTS 4
+#define MAX_POINT_LIGHTS 32
 
 in vec2 TexCoords;
 in vec3 Normal;
@@ -52,7 +52,8 @@ uniform vec3 viewPos;
 
 uniform Material material;
 uniform DirLight dirLight;
-uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform PointLight pointLights[MAX_POINT_LIGHTS]; // upper bound
+uniform int pointLightsCount; // number of point lights in the scene
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos);
@@ -60,14 +61,14 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos);
 
 void main()
 {
-    vec3 color;
+    vec3 color = vec3(0.0);
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 
     // dir lighting :
     // color = CalcDirLight(dirLight, norm, viewDir);
 
-    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+    for (int i = 0; i < pointLightsCount; i++) {
         color += CalcPointLight(pointLights[i], norm, viewDir, FragPos);
     }
 

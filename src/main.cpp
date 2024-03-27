@@ -3,11 +3,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "DefaultDrawStrategy.hpp"
 #include "Scene.hpp"
 #include "s_Matrices.hpp"
 #include "s_MouseInput.hpp"
-#define STB_IMAGE_IMPLEMENTATION
 #include <glm/glm.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <shader.hpp>
@@ -100,15 +102,15 @@ int main() {
   matrices.projection = glm::mat4(1.0f);
 
   s_LightSettings defaultLightSettings;
-  defaultLightSettings.ambient = glm::vec3(0.1f, 0.25f, 0.2f);
-  defaultLightSettings.diffuse = glm::vec3(0.2f, 0.5f, 0.4f);
+  defaultLightSettings.ambient = glm::vec3(0.5f, 0.1f, 0.1f);
+  defaultLightSettings.diffuse = glm::vec3(1.0f, 0.2f, 0.2f);
   defaultLightSettings.specular = glm::vec3(1.0f, 1.0f, 1.0f);
   defaultLightSettings.constant = 1.0f;
   defaultLightSettings.linear = 0.007f;
   defaultLightSettings.quadratic = 0.0002f;
 
   /* Camera: */
-  Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
+  Camera camera(glm::vec3(0.0f, 0.0f, 17.0f));
   s_MouseInput mouseInput;
 
   std::vector<Model> models;
@@ -117,14 +119,29 @@ int main() {
   models.push_back(cube);
 
   Scene scene;
+  scene.addModel(&backpack);
+  scene.addModel(&cube);
 
   RenderContext context(litShader);
+  context.setShader(litShader);
   context.setCamera(camera);
   context.setMouseInput(mouseInput);
   context.setMatrices(matrices);
   context.setBgColor(glm::vec3(0.0f, 0.1f, 0.24f));
 
+  DefaultDrawStrategy defaultStrat;
+  backpack.setDrawStrategy(defaultStrat);
+  cube.setDrawStrategy(defaultStrat);
+  cube.translate(glm::vec3(2.0f, 8.0f, 0.0f));
+  cube.scale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+  defaultLightSettings.position = cube.getModelMatrix()[3];
+  cube.setAsLightSource(defaultLightSettings);
+  scene.addLightSource(new LightSource(defaultLightSettings));
+  scene.updateContextLightSourcesList(context);
+
   glfwSetWindowUserPointer(window, &context);
+  std::cout << "Entering game loop" << std::endl;
 
   /* ***************************************************************** */
   /* Game loop: */
@@ -142,8 +159,19 @@ int main() {
     glClearColor(bg.x, bg.y, bg.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    backpack.Draw(context);
+    matrices.projection =
+        glm::perspective(glm::radians(context.getCamera().Zoom),
+                         float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f, 100.0f);
+    matrices.view = context.getCamera().GetViewMatrix();
+    context.setMatrices(matrices);
 
+    backpack.Draw(context);
+    cube.Draw(context);
+
+    // std::cout << "Player position: (" << context.getCamera().Position.x << ",
+    // "
+    //           << context.getCamera().Position.y << ", "
+    //           << context.getCamera().Position.z << ")" << std::endl;
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
