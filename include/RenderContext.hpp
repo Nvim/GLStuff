@@ -7,7 +7,8 @@
 // #include "model.hpp"
 #include "s_Matrices.hpp"
 #include "s_MouseInput.hpp"
-#include "texture.hpp"
+
+class Model;
 
 class RenderContext {
 private:
@@ -30,6 +31,9 @@ public:
   void setShader(Shader &shader);
   // void setTexture(Texture &texture);
   void setLightSources(std::vector<LightSource *> &lightSrcs);
+  void addLightSource(Model &m, LightSource &ls);
+  void addLightSource(Model &m, s_LightSettings &ls);
+  void RemoveLightSource(Model &m);
 
   Camera &getCamera();
   s_MouseInput &getMouseInput();

@@ -1,21 +1,16 @@
 #pragma once
 
 #include "IObserver.hpp"
-#include "ISubject.hpp"
-#include <vector>
 #include "s_LightSettings.hpp"
 
-class LightSource : public ISubject {
+class LightSource : public IObserver {
 private:
   s_LightSettings lightSettings;
-  std::vector<IObserver *> observers;
 
 public:
-  LightSource(s_LightSettings lightSettings);
-  void setLightSettings(s_LightSettings &light);
-  s_LightSettings getLightSettings();
+  LightSource(s_LightSettings &ls);
 
-  void RegisterObserver(IObserver *observer) override;
-  void RemoveObserver(IObserver *observer) override;
-  void NotifyObservers() override;
+  void Update(const glm::mat4 pos);
+  s_LightSettings &getLightSettings();
+  void setLightSettings(s_LightSettings &ls);
 };

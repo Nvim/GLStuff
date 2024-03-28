@@ -1,3 +1,4 @@
+#include "DefaultDrawStrategy.hpp"
 #include "LightSourceDrawStrategy.hpp"
 #include <assimp/material.h>
 #include <model.hpp>
@@ -22,20 +23,13 @@ void Model::loadModelVerbose() {
   std::cout << "Model loaded in " << t2 - t1 << " secs" << std::endl;
 }
 
-void Model::setLightSourcesList(std::vector<LightSource *> lightSrcs) {
-  this->lightSources = lightSrcs;
-}
-
-std::vector<LightSource *> Model::getLightSourcesList() {
-  return this->lightSources;
-}
+void Model::unsetLightSource() { this->DrawStrategy = new DefaultDrawStrategy; }
 
 void Model::setDrawStrategy(IDrawStrategy &strategy) {
   this->DrawStrategy = &strategy;
 }
 
-void Model::setAsLightSource(s_LightSettings lightSettings) {
-  // setDrawStrategy(new LightSourceDrawStrategy(lightSettings));
+void Model::setAsLightSource(s_LightSettings &lightSettings) {
   this->DrawStrategy = new LightSourceDrawStrategy(lightSettings);
 }
 
@@ -166,6 +160,22 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
   }
   // numTextures = i;
   return textures;
+}
+
+// observer stuff:
+std::vector<IObserver *> &Model::getObservers() { return observers; }
+
+void Model::AddObserver(IObserver *o) { observers.push_back(o); }
+
+void Model::RemoveObserver(IObserver *o) {
+  observers.erase(std::remove(observers.begin(), observers.end(), o),
+                  observers.end());
+}
+
+void Model::NotifyObservers() {
+  for (IObserver *o : observers) {
+    o->Update(this->modelMatrix);
+  }
 }
 
 const glm::mat4 &Model::getModelMatrix() const { return modelMatrix; }

@@ -101,6 +101,7 @@ int main() {
   matrices.view = glm::mat4(1.0f);
   matrices.projection = glm::mat4(1.0f);
 
+  /* LightSettings */
   s_LightSettings defaultLightSettings;
   defaultLightSettings.ambient = glm::vec3(0.5f, 0.1f, 0.1f);
   defaultLightSettings.diffuse = glm::vec3(1.0f, 0.2f, 0.2f);
@@ -112,15 +113,6 @@ int main() {
   /* Camera: */
   Camera camera(glm::vec3(0.0f, 0.0f, 17.0f));
   s_MouseInput mouseInput;
-
-  std::vector<Model> models;
-  models.reserve(2);
-  models.push_back(backpack);
-  models.push_back(cube);
-
-  Scene scene;
-  scene.addModel(&backpack);
-  scene.addModel(&cube);
 
   RenderContext context(litShader);
   context.setShader(litShader);
@@ -134,11 +126,11 @@ int main() {
   cube.setDrawStrategy(defaultStrat);
   cube.translate(glm::vec3(2.0f, 8.0f, 0.0f));
   cube.scale(glm::vec3(0.5f, 0.5f, 0.5f));
+  cube.rotate(glm::radians(45.0f), glm::vec3(0.5f, 0.5f, 0.5f));
 
+  context.addLightSource(cube, defaultLightSettings);
   defaultLightSettings.position = cube.getModelMatrix()[3];
   cube.setAsLightSource(defaultLightSettings);
-  scene.addLightSource(new LightSource(defaultLightSettings));
-  scene.updateContextLightSourcesList(context);
 
   glfwSetWindowUserPointer(window, &context);
   std::cout << "Entering game loop" << std::endl;

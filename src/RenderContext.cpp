@@ -1,6 +1,6 @@
-#include "texture.hpp"
 #include <RenderContext.hpp>
 #include <iostream>
+#include <model.hpp>
 
 // setters:
 RenderContext::RenderContext(Shader &sha) : shader(sha) {
@@ -20,6 +20,36 @@ void RenderContext::setShader(Shader &shader) { this->shader = shader; }
 // void RenderContext::setTexture(Texture &texture) { this->texture = texture; }
 void RenderContext::setLightSources(std::vector<LightSource *> &lightSrcs) {
   this->lightSources = lightSrcs;
+}
+
+void RenderContext::addLightSource(Model &m, LightSource &ls) {
+  m.setAsLightSource(ls.getLightSettings());
+  m.AddObserver(&ls);
+  ls.Update(m.getModelMatrix());
+  this->lightSources.push_back(&ls);
+}
+
+void RenderContext::addLightSource(Model &m, s_LightSettings &ls) {
+  LightSource lsrc(ls);
+  m.setAsLightSource(lsrc.getLightSettings());
+  m.AddObserver(&lsrc);
+  lsrc.Update(m.getModelMatrix());
+  this->lightSources.push_back(&lsrc);
+}
+
+void RenderContext::RemoveLightSource(Model &m) {
+  // get all lightSources tied to the Model (normally one)
+  // and remove them from the lightSources list
+  std::vector<IObserver *> mLightSources = m.getObservers();
+  for (IObserver *o : mLightSources) {
+    LightSource *ls = static_cast<LightSource *>(o);
+    lightSources.erase(
+        std::remove(lightSources.begin(), lightSources.end(), ls),
+        lightSources.end());
+  }
+
+  // change model strategy
+  m.unsetLightSource();
 }
 
 // getters:
