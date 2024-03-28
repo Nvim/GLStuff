@@ -30,24 +30,27 @@ void RenderContext::addLightSource(Model &m, LightSource &ls) {
 }
 
 void RenderContext::addLightSource(Model &m, s_LightSettings &ls) {
-  LightSource lsrc(ls);
-  m.setAsLightSource(lsrc.getLightSettings());
-  m.AddObserver(&lsrc);
-  lsrc.Update(m.getModelMatrix());
-  this->lightSources.push_back(&lsrc);
+  LightSource *lsrc = new LightSource(ls);
+  m.setAsLightSource(lsrc->getLightSettings());
+  m.AddObserver(lsrc);
+  m.NotifyObservers();
+  this->lightSources.push_back(lsrc);
 }
 
 void RenderContext::RemoveLightSource(Model &m) {
-  // get all lightSources tied to the Model (normally one)
-  // and remove them from the lightSources list
+  /* get all lightSources tied to the Model
+  and remove them from the lightSources list */
   std::vector<IObserver *> mLightSources = m.getObservers();
   for (IObserver *o : mLightSources) {
-    LightSource *ls = static_cast<LightSource *>(o);
-    lightSources.erase(
-        std::remove(lightSources.begin(), lightSources.end(), ls),
-        lightSources.end());
+    LightSource *ls = dynamic_cast<LightSource *>(o);
+    if (ls) {
+      auto it = std::remove(lightSources.begin(), lightSources.end(), ls);
+      if (it != lightSources.end()) {
+        lightSources.erase(it, lightSources.end());
+        delete ls;
+      }
+    }
   }
-
   // change model strategy
   m.unsetLightSource();
 }

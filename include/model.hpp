@@ -26,6 +26,7 @@ public:
   void rotate(float angle, const glm::vec3 &axis);
   void translate(const glm::vec3 &translation);
   void scale(const glm::vec3 &scale);
+  void resetModelMatrix();
   // observer stuff:
   std::vector<IObserver *> &getObservers();
   void AddObserver(IObserver *observer) override;

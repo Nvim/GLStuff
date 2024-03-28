@@ -124,16 +124,18 @@ int main() {
   DefaultDrawStrategy defaultStrat;
   backpack.setDrawStrategy(defaultStrat);
   cube.setDrawStrategy(defaultStrat);
-  cube.translate(glm::vec3(2.0f, 8.0f, 0.0f));
+  cube.translate(glm::vec3(0.0f, 0.0f, 0.0f));
   cube.scale(glm::vec3(0.5f, 0.5f, 0.5f));
-  cube.rotate(glm::radians(45.0f), glm::vec3(0.5f, 0.5f, 0.5f));
 
   context.addLightSource(cube, defaultLightSettings);
   defaultLightSettings.position = cube.getModelMatrix()[3];
-  cube.setAsLightSource(defaultLightSettings);
+  // cube.setAsLightSource(defaultLightSettings);
 
   glfwSetWindowUserPointer(window, &context);
   std::cout << "Entering game loop" << std::endl;
+
+  const float radius = 2.0f;
+  const float rotationSpeed = 0.4f;
 
   /* ***************************************************************** */
   /* Game loop: */
@@ -145,6 +147,7 @@ int main() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
     float time = (float)glfwGetTime();
+    float angle = time * rotationSpeed; // rotation angle
     processInput(window, context);
 
     glm::vec3 bg = context.getBgColor();
@@ -156,6 +159,15 @@ int main() {
                          float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f, 100.0f);
     matrices.view = context.getCamera().GetViewMatrix();
     context.setMatrices(matrices);
+
+    float x = 1.0f + sin(time) * radius;
+    float y = sin(time / 2.0f) * 1.0f;
+    cube.resetModelMatrix();
+    cube.translate(glm::vec3(-9.0f, 0.0f, 9.0f));
+    cube.translate(glm::vec3(x, y, 0.0f));
+    defaultLightSettings.ambient.x += sin(time);
+    defaultLightSettings.ambient.y += cos(time) / 2.0f;
+    defaultLightSettings.ambient.z += sin(time) * 2.0f;
 
     backpack.Draw(context);
     cube.Draw(context);

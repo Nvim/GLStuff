@@ -182,12 +182,20 @@ const glm::mat4 &Model::getModelMatrix() const { return modelMatrix; }
 
 void Model::rotate(float angle, const glm::vec3 &axis) {
   modelMatrix = glm::rotate(modelMatrix, glm::radians(angle), axis);
+  NotifyObservers();
 }
 
 void Model::translate(const glm::vec3 &translation) {
   modelMatrix = glm::translate(modelMatrix, translation);
+  NotifyObservers();
 }
 
 void Model::scale(const glm::vec3 &scale) {
   modelMatrix = glm::scale(modelMatrix, scale);
+  NotifyObservers();
+}
+
+void Model::resetModelMatrix() {
+  modelMatrix = glm::mat4(1.0f);
+  NotifyObservers();
 }
