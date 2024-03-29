@@ -23,7 +23,7 @@ void RenderContext::setLightSources(std::vector<LightSource *> &lightSrcs) {
 }
 
 void RenderContext::addLightSource(Model &m, LightSource &ls) {
-  m.setAsLightSource(ls.getLightSettings());
+  m.setAsLightSource(*ls.getLightSettings());
   m.AddObserver(&ls);
   ls.Update(m.getModelMatrix());
   this->lightSources.push_back(&ls);
@@ -31,7 +31,7 @@ void RenderContext::addLightSource(Model &m, LightSource &ls) {
 
 void RenderContext::addLightSource(Model &m, s_LightSettings &ls) {
   LightSource *lsrc = new LightSource(ls);
-  m.setAsLightSource(lsrc->getLightSettings());
+  m.setAsLightSource(*lsrc->getLightSettings());
   m.AddObserver(lsrc);
   m.NotifyObservers();
   this->lightSources.push_back(lsrc);

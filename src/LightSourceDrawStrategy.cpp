@@ -46,7 +46,7 @@ void LightSourceDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
 
   // point lights
   for (int i = 0; i < lights.size(); i++) {
-    s_LightSettings ls = lights[i]->getLightSettings();
+    s_LightSettings ls = *(lights[i]->getLightSettings());
     shader.setVec3("pointLights[" + std::to_string(i) + "].ambient",
                    ls.ambient);
     shader.setVec3("pointLights[" + std::to_string(i) + "].diffuse",
