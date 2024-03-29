@@ -2,17 +2,24 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
-#include "glm/ext/matrix_transform.hpp"
-#define STB_IMAGE_IMPLEMENTATION
+#include <vector>
+#include "DefaultDrawStrategy.hpp"
+#include "Scene.hpp"
+#include "s_Matrices.hpp"
+#include "s_MouseInput.hpp"
 #include <glm/glm.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <shader.hpp>
 #include <camera.hpp>
-#include <texture.hpp>
 #include <vao.hpp>
 #include <vbo.hpp>
 #include <ebo.hpp>
+#include <mesh.hpp>
+#include <texture.hpp>
+#include "model.hpp"
 
 // functions:
 GLenum glCheckError_(const char *file, int line);
@@ -22,21 +29,12 @@ unsigned int load_texture(const char *file, const unsigned short jpg);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, RenderContext &context);
 
 /* Settings: */
-const unsigned int SCR_WIDTH = 1600;
-const unsigned int SCR_HEIGHT = 1200;
 bool rotateCube = false;
 bool rotateLight = false;
 bool rgbLight = false;
-bool dirLight = false;
-
-/* Camera: */
-Camera camera(glm::vec3(0.0f, 0.0f, 7.0f));
-float lastMouseX = SCR_WIDTH / 2.0f;
-float lastMouseY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
 
 /* Timing: */
 float deltaTime = 0.0f;
@@ -86,219 +84,103 @@ int main() {
     RENDERING !
   */
 
-  // clang-format off
-  float vertices[] = {
-    /* position       */ /* texture */ /* normal */
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,  0.0f, -1.0f,
-    0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f,  0.0f, -1.0f, 
-    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f, 
-    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f, 
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  0.0f, -1.0f, 
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f, 
-
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f, 1.0f,
-    0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  0.0f, 1.0f,
-    0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f, 1.0f,
-    0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  0.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f, 1.0f,
-
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
-
-    0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-    0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-    0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-    0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-    0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-    0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-    0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-    0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-    0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-    0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f
-  };
-  glm::vec3 pointLightPositions[] = {
-    glm::vec3( 0.7f,  0.2f,  2.0f),
-    glm::vec3( 2.3f, -3.3f, -4.0f),
-    glm::vec3(-4.0f,  2.0f, -12.0f),
-    glm::vec3( 0.0f,  0.0f, -3.0f)
-  };
-
-  // clang-format on
-
   /* Shader Program: */
   Shader litShader("res/lighting/lit.vert", "res/lighting/litFinal.frag");
   Shader lightSourceShader("res/lighting/lightSource.vert",
                            "res/lighting/lightSource.frag");
 
-  /* Buffer Objects: */
-  VAO cubeVao;
-  VBO vbo(vertices, sizeof(vertices));
-  VAO lightVao;
+  /* Models */
+  Model backpack("res/backpack/backpack.obj");
+  Model cube("res/cube/cube.obj");
+  backpack.loadModelVerbose();
+  cube.loadModel();
 
-  cubeVao.Bind();
-  // ebo.Bind();
+  /* Matrices */
+  s_Matrices matrices;
+  matrices.model = glm::mat4(1.0f);
+  matrices.view = glm::mat4(1.0f);
+  matrices.projection = glm::mat4(1.0f);
 
-  // position attribute:
-  cubeVao.LinkVBO(vbo, 0, 3, GL_FLOAT, 8 * sizeof(float), (void *)0);
+  /* LightSettings */
+  s_LightSettings defaultLightSettings;
+  defaultLightSettings.ambient = glm::vec3(0.5f, 0.1f, 0.1f);
+  defaultLightSettings.diffuse = glm::vec3(1.0f, 0.2f, 0.2f);
+  defaultLightSettings.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+  defaultLightSettings.constant = 1.0f;
+  defaultLightSettings.linear = 0.007f;
+  defaultLightSettings.quadratic = 0.0002f;
 
-  // texture attribute:
-  cubeVao.LinkVBO(vbo, 1, 2, GL_FLOAT, 8 * sizeof(float),
-                  (void *)(3 * sizeof(float)));
+  /* Camera: */
+  Camera camera(glm::vec3(0.0f, 0.0f, 17.0f));
+  s_MouseInput mouseInput;
 
-  /* normal attribute: */
-  cubeVao.LinkVBO(vbo, 2, 3, GL_FLOAT, 8 * sizeof(float),
-                  (void *)(5 * sizeof(float)));
+  RenderContext context(litShader);
+  context.setShader(litShader);
+  context.setCamera(camera);
+  context.setMouseInput(mouseInput);
+  context.setMatrices(matrices);
+  context.setBgColor(glm::vec3(0.0f, 0.1f, 0.24f));
 
-  /* Loading textures: */
-  Texture texContainer("res/container2.png", GL_TEXTURE_2D, GL_TEXTURE0,
-                       GL_RGBA, GL_UNSIGNED_BYTE);
-  Texture texSpecular("res/container2_specular.png", GL_TEXTURE_2D, GL_TEXTURE1,
-                      GL_RGBA, GL_UNSIGNED_BYTE);
-  Texture texEmissive("res/matrix.jpg", GL_TEXTURE_2D, GL_TEXTURE2, GL_RGB,
-                      GL_UNSIGNED_BYTE);
+  DefaultDrawStrategy defaultStrat;
+  backpack.setDrawStrategy(defaultStrat);
+  cube.setDrawStrategy(defaultStrat);
+  cube.translate(glm::vec3(0.0f, 0.0f, 0.0f));
+  cube.scale(glm::vec3(0.5f, 0.5f, 0.5f));
 
-  texContainer.TexUnit(litShader, "material.diffuse", 0);
-  texContainer.TexUnit(litShader, "material.specular", 1);
-  texContainer.TexUnit(litShader, "material.emissive", 2);
-  cubeVao.Unbind();
+  context.addLightSource(cube, defaultLightSettings);
+  defaultLightSettings.position = cube.getModelMatrix()[3];
+  // cube.setAsLightSource(defaultLightSettings);
 
-  lightVao.Bind();
-  lightVao.LinkVBO(vbo, 0, 3, GL_FLOAT, 8 * sizeof(float), (void *)0);
-  lightVao.Unbind();
+  glfwSetWindowUserPointer(window, &context);
+  std::cout << "Entering game loop" << std::endl;
 
-  /* Transformation Matrices: */
-  glm::mat4 model = glm::mat4(1.0f);
-  glm::mat4 view = glm::mat4(1.0f);
-  glm::mat4 projection = glm::mat4(1.0f);
+  const float radius = 2.0f;
+  const float rotationSpeed = 0.4f;
 
-  float x = lightPos.x;
-  float z = lightPos.z;
+  /* ***************************************************************** */
   /* Game loop: */
-  while (!glfwWindowShouldClose(window)) {
-    view = glm::mat4(1.0f);
-    projection = glm::mat4(1.0f);
-    model = glm::mat4(1.0f);
+  /* ***************************************************************** */
 
+  while (!glfwWindowShouldClose(window)) {
     // timing & input:
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
     float time = (float)glfwGetTime();
-    processInput(window);
+    float angle = time * rotationSpeed; // rotation angle
+    processInput(window, context);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glm::vec3 bg = context.getBgColor();
+    glClearColor(bg.x, bg.y, bg.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    projection =
-        glm::perspective(glm::radians(camera.Zoom),
+    matrices.projection =
+        glm::perspective(glm::radians(context.getCamera().Zoom),
                          float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f, 100.0f);
-    view = camera.GetViewMatrix();
+    matrices.view = context.getCamera().GetViewMatrix();
+    context.setMatrices(matrices);
 
-    /* draw lit cube: */
-    litShader.use();
-    glm::vec3 lightColor = glm::vec3(1.0f);
-    if (rgbLight) {
-      lightColor.x = fmax(sin(glfwGetTime() * 2.0f), 0.1f);
-      lightColor.y = fmax(cos(glfwGetTime() * 0.7f), 0.1f);
-      lightColor.z = fmax(sin(glfwGetTime() * 1.3f), 0.1f);
-    }
-    glm::vec3 diffuseColor = lightColor;
-    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.25f);
+    float x = 1.0f + sin(time) * radius;
+    float y = sin(time / 2.0f) * 1.0f;
+    cube.resetModelMatrix();
+    cube.translate(glm::vec3(-9.0f, 0.0f, 9.0f));
+    cube.translate(glm::vec3(x, y, 0.0f));
+    defaultLightSettings.ambient.x += sin(time);
+    defaultLightSettings.ambient.y += cos(time) / 2.0f;
+    defaultLightSettings.ambient.z += sin(time) * 2.0f;
 
-    litShader.setVec3("viewPos", camera.Position);
+    backpack.Draw(context);
+    cube.Draw(context);
 
-    // material:
-    litShader.setFloat("material.shininess", 64.0f);
-
-    // lights:
-    if (dirLight) {
-      litShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-      litShader.setVec3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-      litShader.setVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-      litShader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-    }
-
-    for (int i = 0; i < 4; i++) {
-      // if (rotateLight) {
-      //   x += 1.0f + sin(time) * 20.0f;
-      //   z += 1.0f + cos(time) * 2.0f;
-      // }
-      litShader.setVec3("pointLights[" + std::to_string(i) + "].ambient",
-                        ambientColor);
-      litShader.setVec3("pointLights[" + std::to_string(i) + "].diffuse",
-                        diffuseColor);
-      litShader.setVec3("pointLights[" + std::to_string(i) + "].specular",
-                        glm::vec3(1.0f, 1.0f, 1.0f));
-      litShader.setVec3("pointLights[" + std::to_string(i) + "].position",
-                        pointLightPositions[i]);
-      litShader.setFloat("pointLights[" + std::to_string(i) + "].constant",
-                         1.0f);
-      litShader.setFloat("pointLights[" + std::to_string(i) + "].linear",
-                         0.09f);
-      litShader.setFloat("pointLights[" + std::to_string(i) + "].quadratic",
-                         0.032f);
-    }
-    // litShader.setFloat("pointLights[" + std::to_string(i) + "].cutoff",
-    //                    glm::cos(glm::radians(12.0f)));
-    // litShader.setFloat("pointLights[" + std::to_string(i) +
-    // "].outerCutoff",
-    //                    glm::cos(glm::radians(17.5f)));
-    // matrices:
-    litShader.setMat4("view", view);
-    litShader.setMat4("projection", projection);
-    if (rotateCube) {
-      model = glm::rotate(model, glm::radians(45.0f) * time,
-                          glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-    litShader.setMat4("model", model);
-
-    texContainer.Bind();
-    texSpecular.Bind();
-    texEmissive.Bind();
-    cubeVao.Bind();
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    /* draw light source: */
-    lightSourceShader.use();
-
-    lightVao.Bind();
-    for (int i = 0; i < 4; i++) {
-      model = glm::mat4(1.0f);
-      // lightPos.z += cos(time) * radius;
-      // model = glm::translate(model, glm::vec3(x, lightPos.y, z));
-      model = glm::translate(model, pointLightPositions[i]);
-      model = glm::scale(model, glm::vec3(0.2f));
-      lightSourceShader.setMat4("model", model);
-      lightSourceShader.setVec3("lightColor", lightColor);
-      lightSourceShader.setMat4("view", view);
-      lightSourceShader.setMat4("projection", projection);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
-
+    // std::cout << "Player position: (" << context.getCamera().Position.x << ",
+    // "
+    //           << context.getCamera().Position.y << ", "
+    //           << context.getCamera().Position.z << ")" << std::endl;
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
   // cleanup:
-  cubeVao.Delete();
-  lightVao.Delete();
-  vbo.Delete();
-  texContainer.Delete();
   // texHuh.Delete();
   litShader.Delete();
   lightSourceShader.Delete();
@@ -339,47 +221,53 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window) {
+void processInput(GLFWwindow *window, RenderContext &context) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    camera.ProcessKeyboard(FORWARD, deltaTime);
+    context.getCamera().ProcessKeyboard(FORWARD, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    camera.ProcessKeyboard(BACKWARD, deltaTime);
+    context.getCamera().ProcessKeyboard(BACKWARD, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    camera.ProcessKeyboard(LEFT, deltaTime);
+    context.getCamera().ProcessKeyboard(LEFT, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    camera.ProcessKeyboard(RIGHT, deltaTime);
+    context.getCamera().ProcessKeyboard(RIGHT, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     glfwSetCursorPosCallback(window, mouse_callback);
-  if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-    rotateCube == true ? rotateCube = false : rotateCube = true;
-  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-    rotateLight == true ? rotateLight = false : rotateLight = true;
-  if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
-    rgbLight == true ? rgbLight = false : rgbLight = true;
-  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-    dirLight == true ? dirLight = false : dirLight = true;
+  // if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+  //   scene.dirLight == true ? scene.dirLight = false : scene.dirLight = true;
+  if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    context.getCamera().ProcessArrows(DIR_UP, 1.0f);
+  if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    context.getCamera().ProcessArrows(DIR_DOWN, 1.0f);
+  if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+    context.getCamera().ProcessArrows(DIR_LEFT, 1.0f);
+  if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+    context.getCamera().ProcessArrows(DIR_RIGHT, 1.0f);
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
+  RenderContext *context = (RenderContext *)glfwGetWindowUserPointer(window);
+  s_MouseInput in = context->getMouseInput();
   float xpos = static_cast<float>(xposIn);
   float ypos = static_cast<float>(yposIn);
-  if (firstMouse) // initially set to true
+  if (in.firstMouse) // initially set to true
   {
-    lastMouseX = xpos;
-    lastMouseY = ypos;
-    firstMouse = false;
+    in.lastMouseX = xpos;
+    in.lastMouseY = ypos;
+    in.firstMouse = false;
   }
 
-  float xOffset = xpos - lastMouseX;
-  float yOffset = lastMouseY - ypos;
-  lastMouseX = xpos;
-  lastMouseY = ypos;
+  float xOffset = (xpos - in.lastMouseX);
+  float yOffset = (in.lastMouseY - ypos);
+  in.lastMouseX = xpos;
+  in.lastMouseY = ypos;
 
-  camera.ProcessMouseMovement(xOffset, yOffset);
+  context->getCamera().ProcessMouseMovement(xOffset, yOffset);
+  context->setMouseInput(in);
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-  camera.ProcessMouseScroll(static_cast<float>(yoffset));
+  RenderContext *context = (RenderContext *)glfwGetWindowUserPointer(window);
+  context->getCamera().ProcessMouseScroll(static_cast<float>(yoffset));
 }

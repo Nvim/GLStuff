@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.12)
 project(GLStuff)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # Vérifier le système d'exploitation
 if(UNIX AND NOT APPLE)
     message(STATUS "Configuring for Linux")
     set(DEPENDENCIES_DIR deps)
     add_subdirectory(deps/glfw)
-    add_subdirectory(deps/assimp)
     set(LINUX_DEPENDENCIES pthread GL X11 Xrandr Xi dl)
 # set(LINUX_DEPENDENCIES pthread GL pthread glfw3-wayland)
 
@@ -40,6 +39,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+FetchContent_Declare(
+  assimp
+	GIT_REPOSITORY	https://github.com/assimp/assimp
+)
+FetchContent_MakeAvailable(assimp)
+
 set(ASSIMP_BUILD_TEST OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL_PDB OFF CACHE BOOL "" FORCE)
 
@@ -47,6 +52,7 @@ set(ASSIMP_INSTALL_PDB OFF CACHE BOOL "" FORCE)
 include_directories(
   #${DEPENDENCIES_DIR}/Include
   ./include
+  ${DEPENDENCIES_DIR}
   ${ASSIMP_INCLUDE_DIRS}
   ${OPENGL_INCLUDE_DIRS} 
 )
@@ -76,6 +82,7 @@ set_target_properties(GLStuffDebug PROPERTIES
 target_link_libraries(GLStuffDebug
     PRIVATE
     glfw
+    assimp
     glm::glm
     ${ASSIMP_LIBRARIES}
     ${LINUX_DEPENDENCIES}
@@ -92,6 +99,7 @@ set_target_properties(GLStuffRelease PROPERTIES
 target_link_libraries(GLStuffRelease
     PRIVATE
     glfw
+    assimp
     glm::glm
     ${ASSIMP_LIBRARIES}
     ${LINUX_DEPENDENCIES}
