@@ -8,9 +8,8 @@
 #include "s_Matrices.hpp"
 #include "s_MouseInput.hpp"
 #include <glm/glm.hpp>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <stb_image/stb_image.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <shader.hpp>
 #include <camera.hpp>

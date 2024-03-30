@@ -1,5 +1,6 @@
 #include <iostream>
 #include <texture.hpp>
+#include <stb_image/stb_image.h>
 
 Texture::Texture(const char *file, const char *textureType, GLenum slot) {
   stbi_set_flip_vertically_on_load(true);
