@@ -160,14 +160,16 @@ int main() {
     matrices.view = context.getCamera().GetViewMatrix();
     context.setMatrices(matrices);
 
-    float x = 1.0f + sin(time) * radius;
-    float y = sin(time / 2.0f) * 1.0f;
+    // float x = 1.0f + sin(time) * radius;
+    // float y = sin(time / 2.0f) * 2.5f;
+    float x = 1.0f, y = 1.0f;
+    float z = sin(time * 2.0f) * 3.2f;
     cube.resetModelMatrix();
-    cube.translate(glm::vec3(-9.0f, 0.0f, 9.0f));
-    cube.translate(glm::vec3(x, y, 0.0f));
-    defaultLightSettings.ambient.x += sin(time);
-    defaultLightSettings.ambient.y += cos(time) / 2.0f;
-    defaultLightSettings.ambient.z += sin(time) * 2.0f;
+    cube.translate(glm::vec3(-6.0f, 0.0f, 7.0f));
+    cube.translate(glm::vec3(x, y, z));
+    defaultLightSettings.ambient.x = (sin(time) + 1.0f) / 2.0f;
+    defaultLightSettings.ambient.y = (cos(time) + 1.0f) / 2.0f;
+    // defaultLightSettings.ambient.z = sin(time) * 2.0f;
 
     backpack.Draw(context);
     cube.Draw(context);

@@ -10,7 +10,7 @@ void LightSourceDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
   Shader shader = context.getShader();
   VAO vao = mesh.vao;
   std::vector<unsigned int> indices = mesh.indices;
-  std::vector<Texture> textures = mesh.textures;
+  // std::vector<Texture> textures = mesh.textures;
   Camera camera = context.getCamera();
   vao.Bind();
   std::vector<LightSource *> lights = context.getLightSources();
@@ -19,15 +19,7 @@ void LightSourceDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
   unsigned int numSpecular = 0;
   unsigned int numEmissive = 0;
 
-  bindTextures(shader, textures, numDiffuse, numSpecular, numEmissive);
-
-  // glm::mat4 view = glm::mat4(1.0f);
-  // glm::mat4 projection = glm::mat4(1.0f);
-  // projection =
-  //     glm::perspective(glm::radians(camera.Zoom),
-  //                      float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f,
-  //                      100.0f);
-  // view = camera.GetViewMatrix();
+  // bindTextures(shader, textures, numDiffuse, numSpecular, numEmissive);
 
   // matrices:
   shader.setMat4("model", context.getMatrices().model);
