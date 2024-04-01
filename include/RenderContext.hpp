@@ -17,8 +17,10 @@ private:
   s_Matrices matrices;
   glm::vec3 bgColor;
   Shader shader;
-  // Texture texture;
   std::vector<LightSource *> lightSources;
+
+  s_DirLightSettings dirLightSettings;
+  bool useDirLight;
 
 public:
   RenderContext(Shader &sha);
@@ -34,6 +36,12 @@ public:
   void addLightSource(Model &m, LightSource &ls);
   void addLightSource(Model &m, s_LightSettings &ls);
   void RemoveLightSource(Model &m);
+
+  void enableDirLight();
+  void disableDirLight();
+  void setDirLightSettings(s_DirLightSettings &ls);
+  bool getDirLightStatus();
+  s_DirLightSettings &getDirLight();
 
   Camera &getCamera();
   s_MouseInput &getMouseInput();

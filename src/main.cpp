@@ -90,9 +90,9 @@ int main() {
 
   /* Models */
   Model backpack("res/backpack/backpack.obj");
-  Model cube("res/cube/cube.obj");
+  // Model cube("res/cube/cube.obj");
   backpack.loadModelVerbose();
-  cube.loadModel();
+  // cube.loadModel();
 
   /* Matrices */
   s_Matrices matrices;
@@ -109,6 +109,12 @@ int main() {
   defaultLightSettings.linear = 0.007f;
   defaultLightSettings.quadratic = 0.0002f;
 
+  s_DirLightSettings dirLightSettings;
+  dirLightSettings.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+  dirLightSettings.ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+  dirLightSettings.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+  dirLightSettings.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+
   /* Camera: */
   Camera camera(glm::vec3(0.0f, 0.0f, 17.0f));
   s_MouseInput mouseInput;
@@ -119,15 +125,17 @@ int main() {
   context.setMouseInput(mouseInput);
   context.setMatrices(matrices);
   context.setBgColor(glm::vec3(0.0f, 0.1f, 0.24f));
+  context.enableDirLight();
+  context.setDirLightSettings(dirLightSettings);
 
   DefaultDrawStrategy defaultStrat;
   backpack.setDrawStrategy(defaultStrat);
-  cube.setDrawStrategy(defaultStrat);
-  cube.translate(glm::vec3(0.0f, 0.0f, 0.0f));
-  cube.scale(glm::vec3(0.5f, 0.5f, 0.5f));
+  // cube.setDrawStrategy(defaultStrat);
+  // cube.translate(glm::vec3(0.0f, 0.0f, 0.0f));
+  // cube.scale(glm::vec3(0.5f, 0.5f, 0.5f));
 
-  context.addLightSource(cube, defaultLightSettings);
-  defaultLightSettings.position = cube.getModelMatrix()[3];
+  // context.addLightSource(cube, defaultLightSettings);
+  // defaultLightSettings.position = cube.getModelMatrix()[3];
   // cube.setAsLightSource(defaultLightSettings);
 
   glfwSetWindowUserPointer(window, &context);
@@ -135,6 +143,8 @@ int main() {
 
   const float radius = 2.0f;
   const float rotationSpeed = 0.4f;
+
+  unsigned int counter = 0;
 
   /* ***************************************************************** */
   /* Game loop: */
@@ -144,10 +154,17 @@ int main() {
     // timing & input:
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
-    float time = (float)glfwGetTime();
-    float angle = time * rotationSpeed; // rotation angle
-    processInput(window, context);
+    counter++;
+    if (deltaTime >= 1.0f / 30.0f) {
+      std::string fps = std::to_string((1.0f / deltaTime) * counter);
+      glfwSetWindowTitle(window, fps.c_str());
+      counter = 0;
+      lastFrame = currentFrame;
+      counter = 0;
+      processInput(window, context);
+    }
+
+    float angle = currentFrame * rotationSpeed; // rotation angle
 
     glm::vec3 bg = context.getBgColor();
     glClearColor(bg.x, bg.y, bg.z, 1.0f);
@@ -162,16 +179,16 @@ int main() {
     // float x = 1.0f + sin(time) * radius;
     // float y = sin(time / 2.0f) * 2.5f;
     float x = 1.0f, y = 1.0f;
-    float z = sin(time * 2.0f) * 3.2f;
-    cube.resetModelMatrix();
-    cube.translate(glm::vec3(-6.0f, 0.0f, 7.0f));
-    cube.translate(glm::vec3(x, y, z));
-    defaultLightSettings.ambient.x = (sin(time) + 1.0f) / 2.0f;
-    defaultLightSettings.ambient.y = (cos(time) + 1.0f) / 2.0f;
+    float z = sin(currentFrame * 2.0f) * 3.2f;
+    // cube.resetModelMatrix();
+    // cube.translate(glm::vec3(-6.0f, 0.0f, 7.0f));
+    // cube.translate(glm::vec3(x, y, z));
+    defaultLightSettings.ambient.x = (sin(currentFrame) + 1.0f) / 2.0f;
+    defaultLightSettings.ambient.y = (cos(currentFrame) + 1.0f) / 2.0f;
     // defaultLightSettings.ambient.z = sin(time) * 2.0f;
 
     backpack.Draw(context);
-    cube.Draw(context);
+    // cube.Draw(context);
 
     // std::cout << "Player position: (" << context.getCamera().Position.x << ",
     // "
@@ -235,8 +252,15 @@ void processInput(GLFWwindow *window, RenderContext &context) {
     context.getCamera().ProcessKeyboard(RIGHT, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     glfwSetCursorPosCallback(window, mouse_callback);
-  // if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-  //   scene.dirLight == true ? scene.dirLight = false : scene.dirLight = true;
+  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+    if (context.getDirLightStatus() == true) {
+      context.disableDirLight();
+      std::cout << "dirlight disabled" << std::endl;
+    } else {
+      context.enableDirLight();
+      std::cout << "dirlight enabled" << std::endl;
+    }
+  }
   if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     context.getCamera().ProcessArrows(DIR_UP, 1.0f);
   if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)

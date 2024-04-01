@@ -66,7 +66,7 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
 
     // dir lighting :
-    // color = CalcDirLight(dirLight, norm, viewDir);
+    color = CalcDirLight(dirLight, norm, viewDir);
 
     for (int i = 0; i < pointLightsCount; i++) {
         color += CalcPointLight(pointLights[i], norm, viewDir, FragPos);

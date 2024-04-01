@@ -4,8 +4,20 @@
 
 // setters:
 RenderContext::RenderContext(Shader &sha) : shader(sha) {
+  this->useDirLight = false;
+  this->dirLightSettings = s_DirLightSettings();
   std::cout << "Context Created" << std::endl;
 }
+
+void RenderContext::enableDirLight() { this->useDirLight = true; }
+void RenderContext::disableDirLight() { this->useDirLight = false; }
+
+void RenderContext::setDirLightSettings(s_DirLightSettings &ls) {
+  dirLightSettings = ls;
+}
+bool RenderContext::getDirLightStatus() { return useDirLight; }
+
+s_DirLightSettings &RenderContext::getDirLight() { return dirLightSettings; }
 
 void RenderContext::setCamera(Camera &camera) { this->camera = camera; }
 void RenderContext::setMouseInput(s_MouseInput &mouse) { this->mouse = mouse; }

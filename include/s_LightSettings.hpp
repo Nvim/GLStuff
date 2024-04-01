@@ -15,3 +15,11 @@ typedef struct {
   float linear;
   float quadratic;
 } s_LightSettings;
+
+typedef struct {
+  glm::vec3 ambient = glm::vec3(0.0f);
+  glm::vec3 diffuse = glm::vec3(0.0f);
+  glm::vec3 specular = glm::vec3(0.0f);
+
+  glm::vec3 direction = glm::vec3(0.0f);
+} s_DirLightSettings;

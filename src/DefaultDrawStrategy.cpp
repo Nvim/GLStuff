@@ -28,10 +28,18 @@ void DefaultDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
   shader.setFloat("material.shininess", 32.0f);
 
   // dir light:
-  shader.setVec3("dirLight.direction", glm::vec3(0.2f, -1.0f, -0.3f));
-  shader.setVec3("dirLight.ambient", glm::vec3(0.2f));
-  shader.setVec3("dirLight.diffuse", glm::vec3(0.3f));
-  shader.setVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+  if (context.getDirLightStatus()) {
+    s_DirLightSettings dirLS = context.getDirLight();
+    shader.setVec3("dirLight.direction", dirLS.direction);
+    shader.setVec3("dirLight.ambient", dirLS.ambient);
+    shader.setVec3("dirLight.diffuse", dirLS.diffuse);
+    shader.setVec3("dirLight.specular", dirLS.specular);
+  } else {
+    shader.setVec3("dirLight.direction", glm::vec3(0.0f));
+    shader.setVec3("dirLight.ambient", glm::vec3(0.0f));
+    shader.setVec3("dirLight.diffuse", glm::vec3(0.0f));
+    shader.setVec3("dirLight.specular", glm::vec3(0.0f));
+  }
 
   // point lights
   shader.setInt("pointLightsCount", lights.size());
