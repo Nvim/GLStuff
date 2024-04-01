@@ -19,6 +19,9 @@
 #include <mesh.hpp>
 #include <texture.hpp>
 #include "model.hpp"
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 
 // functions:
 GLenum glCheckError_(const char *file, int line);
@@ -27,13 +30,12 @@ GLenum glCheckError_(const char *file, int line);
 unsigned int load_texture(const char *file, const unsigned short jpg);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+void cursor_enter_callback(GLFWwindow *window, int entered);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window, RenderContext &context);
 
 /* Settings: */
-bool rotateCube = false;
-bool rotateLight = false;
-bool rgbLight = false;
+bool showGui = true;
 
 /* Timing: */
 float deltaTime = 0.0f;
@@ -73,11 +75,24 @@ int main() {
   Set viewport == window */
   glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
   glEnable(GL_DEPTH_TEST);
+
+  // tell GLFW to capture our mouse
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   // call our function when window is resized:
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetScrollCallback(window, scroll_callback);
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetCursorEnterCallback(window, cursor_enter_callback);
+
+  // imgui init
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  ImGui::StyleColorsDark();
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init("#version 330");
 
   /*
     RENDERING !
@@ -124,7 +139,7 @@ int main() {
   context.setCamera(camera);
   context.setMouseInput(mouseInput);
   context.setMatrices(matrices);
-  context.setBgColor(glm::vec3(0.0f, 0.1f, 0.24f));
+  context.setBgColor(glm::vec3(0.43f, 0.59f, 0.82f));
   context.enableDirLight();
   context.setDirLightSettings(dirLightSettings);
 
@@ -145,6 +160,7 @@ int main() {
   const float rotationSpeed = 0.4f;
 
   unsigned int counter = 0;
+  bool dirLight;
 
   /* ***************************************************************** */
   /* Game loop: */
@@ -161,12 +177,64 @@ int main() {
       counter = 0;
       lastFrame = currentFrame;
       counter = 0;
-      processInput(window, context);
+    }
+    glfwPollEvents();
+    processInput(window, context);
+
+    glm::vec3 bg = context.getBgColor();
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    if (showGui) {
+      io.MouseDrawCursor = true;
+      ImGui::Begin("MENU");
+
+      if (ImGui::BeginTabBar("MyTabBar")) {
+        if (ImGui::BeginTabItem("APP")) {
+          if (ImGui::Button("Exit App")) {
+            glfwSetWindowShouldClose(window, true);
+          }
+          if (ImGui::Button("Close Menu")) {
+            showGui = false;
+          }
+          ImGui::Text("Background Color:");
+          ImGui::ColorEdit3("##color", (float *)&bg);
+          context.setBgColor(bg);
+          ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("DirLight")) {
+          ImGui::Checkbox("Directional Light", &dirLight);
+          ImGui::SliderFloat3("DirLight Direction",
+                              (float *)&dirLightSettings.direction, -10.0f,
+                              10.0f);
+          ImGui::SliderFloat3("DirLight Ambient",
+                              (float *)&dirLightSettings.ambient, 0.0f, 1.0f);
+          ImGui::SliderFloat3("DirLight Diffuse",
+                              (float *)&dirLightSettings.diffuse, 0.0f, 1.0f);
+          ImGui::SliderFloat3("DirLight Specular",
+                              (float *)&dirLightSettings.specular, 0.0f, 1.0f);
+          context.setDirLightSettings(dirLightSettings);
+          ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+      }
+
+      ImGui::End();
+      // ImGui::ShowDemoWindow();
+    } else {
+      io.MouseDrawCursor = false;
+    }
+
+    if (dirLight) {
+      context.enableDirLight();
+    } else {
+      context.disableDirLight();
     }
 
     float angle = currentFrame * rotationSpeed; // rotation angle
 
-    glm::vec3 bg = context.getBgColor();
     glClearColor(bg.x, bg.y, bg.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -194,14 +262,18 @@ int main() {
     // "
     //           << context.getCamera().Position.y << ", "
     //           << context.getCamera().Position.z << ")" << std::endl;
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
-    glfwPollEvents();
   }
 
   // cleanup:
   // texHuh.Delete();
   litShader.Delete();
   lightSourceShader.Delete();
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
   glfwTerminate();
   return 0;
 }
@@ -240,8 +312,15 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 }
 
 void processInput(GLFWwindow *window, RenderContext &context) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, true);
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    if (showGui) {
+      showGui = false;
+    } else {
+      // center the cursor before showing gui:
+      glfwSetCursorPos(window, SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f);
+      showGui = true;
+    }
+  }
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     context.getCamera().ProcessKeyboard(FORWARD, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -288,8 +367,21 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
   in.lastMouseX = xpos;
   in.lastMouseY = ypos;
 
-  context->getCamera().ProcessMouseMovement(xOffset, yOffset);
+  if (!showGui) {
+    context->getCamera().ProcessMouseMovement(xOffset, yOffset);
+  }
   context->setMouseInput(in);
+}
+
+void cursor_enter_callback(GLFWwindow *window, int entered) {
+  if (entered) {
+    glfwSetCursorPos(window, SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    std::cout << "Cursor entered window" << std::endl;
+  } else {
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    std::cout << "Cursor left window" << std::endl;
+  }
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {

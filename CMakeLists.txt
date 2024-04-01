@@ -3,15 +3,9 @@ cmake_minimum_required(VERSION 3.12)
 option(PRODUCTION_BUILD "Make this a production build" OFF)
 
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) #link time optimization
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(GLStuff)
-
-set(DEPENDENCIES_DIR deps)
-add_subdirectory(${DEPENDENCIES_DIR}/assimp)
-add_subdirectory(${DEPENDENCIES_DIR}/glfw)
-add_subdirectory(${DEPENDENCIES_DIR}/glad)
-add_subdirectory(${DEPENDENCIES_DIR}/glm)
-add_subdirectory(${DEPENDENCIES_DIR}/stb_image)
 
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL_PDB OFF CACHE BOOL "" FORCE)
@@ -19,8 +13,18 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
 set(DGLM_BUILD_TESTS OFF CACHE BOOL "" FORCE) 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+set(DEPENDENCIES_DIR deps)
+add_subdirectory(${DEPENDENCIES_DIR}/assimp)
+add_subdirectory(${DEPENDENCIES_DIR}/glfw)
+add_subdirectory(${DEPENDENCIES_DIR}/glad)
+add_subdirectory(${DEPENDENCIES_DIR}/glm)
+add_subdirectory(${DEPENDENCIES_DIR}/stb_image)
+add_subdirectory(${DEPENDENCIES_DIR}/imgui-docking)
+
 
 add_executable("${CMAKE_PROJECT_NAME}")
 set_property(TARGET "${CMAKE_PROJECT_NAME}" PROPERTY CXX_STANDARD 17)
@@ -72,5 +76,6 @@ target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE
 	glad 
   stb_image
   assimp
+  imgui
   ${ADDITIONAL_DEPENDENCIES}
 )

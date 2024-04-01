@@ -30,3 +30,4 @@
 # bin/release/GLStuffRelease
 # bin/debug/GLStuffDebug
 build/*
+imgui.ini
