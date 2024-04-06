@@ -1,5 +1,4 @@
 #include <LightSource.hpp>
-#include <bits/stdc++.h>
 
 LightSource::LightSource(s_LightSettings &lightSettings) {
   this->lightSettings = &lightSettings;

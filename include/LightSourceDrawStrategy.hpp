@@ -11,6 +11,7 @@ public:
   LightSourceDrawStrategy(s_LightSettings lightSettings);
   void Draw(RenderContext &context, Mesh &mesh) override;
   void getLightSettings();
+  void setLightSettings(s_LightSettings &lightSettings);
 
 private:
   s_LightSettings lightSettings;

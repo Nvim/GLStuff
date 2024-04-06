@@ -22,11 +22,18 @@ public:
   void loadModel();
   void loadModelVerbose();
   void setDrawStrategy(IDrawStrategy &strategy);
+  IDrawStrategy *getDrawStrategy();
   const glm::mat4 &getModelMatrix() const;
   void rotate(float angle, const glm::vec3 &axis);
   void translate(const glm::vec3 &translation);
   void scale(const glm::vec3 &scale);
   void resetModelMatrix();
+  glm::vec3 getCurrentScale();
+  void setScale(glm::vec3 &newScale);
+  glm::vec3 getCurrentTranslation();
+  void setTranslation(glm::vec3 &newTranslation);
+  glm::vec3 getCurrentRotation();
+  void setRotation(glm::vec3 &newRotation);
   // observer stuff:
   std::vector<IObserver *> &getObservers();
   void AddObserver(IObserver *observer) override;

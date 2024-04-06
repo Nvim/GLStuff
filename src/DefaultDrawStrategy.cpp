@@ -29,7 +29,7 @@ void DefaultDrawStrategy::Draw(RenderContext &context, Mesh &mesh) {
 
   // dir light:
   if (context.getDirLightStatus()) {
-    s_DirLightSettings dirLS = context.getDirLight();
+    s_DirLightSettings dirLS = *(context.getDirLight());
     shader.setVec3("dirLight.direction", dirLS.direction);
     shader.setVec3("dirLight.ambient", dirLS.ambient);
     shader.setVec3("dirLight.diffuse", dirLS.diffuse);

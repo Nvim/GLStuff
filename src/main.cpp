@@ -2,8 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
-#include <vector>
 #include "DefaultDrawStrategy.hpp"
+#include "Gui.hpp"
 #include "Scene.hpp"
 #include "s_Matrices.hpp"
 #include "s_MouseInput.hpp"
@@ -33,9 +33,6 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void cursor_enter_callback(GLFWwindow *window, int entered);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window, RenderContext &context);
-
-/* Settings: */
-bool showGui = true;
 
 /* Timing: */
 float deltaTime = 0.0f;
@@ -86,13 +83,14 @@ int main() {
   glfwSetCursorEnterCallback(window, cursor_enter_callback);
 
   // imgui init
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-  ImGui::StyleColorsDark();
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init("#version 330");
+  // IMGUI_CHECKVERSION();
+  // ImGui::CreateContext();
+  // ImGuiIO &io = ImGui::GetIO();
+  // (void)io;
+  // ImGui::StyleColorsDark();
+  // ImGui_ImplGlfw_InitForOpenGL(window, true);
+  // ImGui_ImplOpenGL3_Init("#version 330");
+  Gui gui(window, "#version 330");
 
   /*
     RENDERING !
@@ -104,7 +102,7 @@ int main() {
                            "res/lighting/lightSource.frag");
 
   /* Models */
-  Model backpack("res/backpack/backpack.obj");
+  Model backpack("res/Helmet/DamagedHelmet.gltf");
   // Model cube("res/cube/cube.obj");
   backpack.loadModelVerbose();
   // cube.loadModel();
@@ -161,6 +159,7 @@ int main() {
 
   unsigned int counter = 0;
   bool dirLight;
+  float tmpScale = 1.0f;
 
   /* ***************************************************************** */
   /* Game loop: */
@@ -170,72 +169,50 @@ int main() {
     // timing & input:
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
-    counter++;
-    if (deltaTime >= 1.0f / 30.0f) {
-      std::string fps = std::to_string((1.0f / deltaTime) * counter);
-      glfwSetWindowTitle(window, fps.c_str());
-      counter = 0;
-      lastFrame = currentFrame;
-      counter = 0;
-    }
+    lastFrame = currentFrame;
+    // counter++;
+    // if (deltaTime >= 1.0f / 30.0f) {
+    //   std::string fps = std::to_string((1.0f / deltaTime) * counter);
+    //   glfwSetWindowTitle(window, fps.c_str());
+    //   counter = 0;
+    //   lastFrame = currentFrame;
+    //   counter = 0;
+    // }
     glfwPollEvents();
     processInput(window, context);
 
-    glm::vec3 bg = context.getBgColor();
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    if (showGui) {
-      io.MouseDrawCursor = true;
+    Gui::NewFrame();
+    if (context.showGui) {
+      // io->MouseDrawCursor = true;
+      gui.ShowCursor();
       ImGui::Begin("MENU");
 
       if (ImGui::BeginTabBar("MyTabBar")) {
-        if (ImGui::BeginTabItem("APP")) {
-          if (ImGui::Button("Exit App")) {
-            glfwSetWindowShouldClose(window, true);
-          }
-          if (ImGui::Button("Close Menu")) {
-            showGui = false;
-          }
-          ImGui::Text("Background Color:");
-          ImGui::ColorEdit3("##color", (float *)&bg);
-          context.setBgColor(bg);
-          ImGui::EndTabItem();
-        }
 
-        if (ImGui::BeginTabItem("DirLight")) {
-          ImGui::Checkbox("Directional Light", &dirLight);
-          ImGui::SliderFloat3("DirLight Direction",
-                              (float *)&dirLightSettings.direction, -10.0f,
-                              10.0f);
-          ImGui::SliderFloat3("DirLight Ambient",
-                              (float *)&dirLightSettings.ambient, 0.0f, 1.0f);
-          ImGui::SliderFloat3("DirLight Diffuse",
-                              (float *)&dirLightSettings.diffuse, 0.0f, 1.0f);
-          ImGui::SliderFloat3("DirLight Specular",
-                              (float *)&dirLightSettings.specular, 0.0f, 1.0f);
-          context.setDirLightSettings(dirLightSettings);
-          ImGui::EndTabItem();
-        }
+        gui.AppTab(context);
+        gui.DirLightTab(context);
+        gui.ModelTab(backpack);
+        //
+        // if (ImGui::BeginTabItem("Model")) {
+        //   glm::vec3 tmpPos = backpack.getModelMatrix()[3];
+        //   ImGui::SliderFloat3("Position", (float *)&tmpPos, -20.0f, 20.0f);
+        //   ImGui::SliderFloat("Scale: ", &tmpScale, 0.0f, 5.0f);
+        //   backpack.translate(tmpPos);
+        //   backpack.scale(glm::vec3(tmpScale));
+        //   ImGui::EndTabItem();
+        // }
 
         ImGui::EndTabBar();
       }
-
       ImGui::End();
-      // ImGui::ShowDemoWindow();
     } else {
-      io.MouseDrawCursor = false;
-    }
-
-    if (dirLight) {
-      context.enableDirLight();
-    } else {
-      context.disableDirLight();
+      gui.HideCursor();
     }
 
     float angle = currentFrame * rotationSpeed; // rotation angle
 
-    glClearColor(bg.x, bg.y, bg.z, 1.0f);
+    glClearColor(context.getBgColor().x, context.getBgColor().y,
+                 context.getBgColor().z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     matrices.projection =
@@ -246,24 +223,15 @@ int main() {
 
     // float x = 1.0f + sin(time) * radius;
     // float y = sin(time / 2.0f) * 2.5f;
-    float x = 1.0f, y = 1.0f;
-    float z = sin(currentFrame * 2.0f) * 3.2f;
     // cube.resetModelMatrix();
     // cube.translate(glm::vec3(-6.0f, 0.0f, 7.0f));
     // cube.translate(glm::vec3(x, y, z));
-    defaultLightSettings.ambient.x = (sin(currentFrame) + 1.0f) / 2.0f;
-    defaultLightSettings.ambient.y = (cos(currentFrame) + 1.0f) / 2.0f;
     // defaultLightSettings.ambient.z = sin(time) * 2.0f;
 
     backpack.Draw(context);
     // cube.Draw(context);
 
-    // std::cout << "Player position: (" << context.getCamera().Position.x << ",
-    // "
-    //           << context.getCamera().Position.y << ", "
-    //           << context.getCamera().Position.z << ")" << std::endl;
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    gui.Render();
     glfwSwapBuffers(window);
   }
 
@@ -271,9 +239,9 @@ int main() {
   // texHuh.Delete();
   litShader.Delete();
   lightSourceShader.Delete();
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
+  // ImGui_ImplOpenGL3_Shutdown();
+  // ImGui_ImplGlfw_Shutdown();
+  // ImGui::DestroyContext();
   glfwTerminate();
   return 0;
 }
@@ -313,13 +281,16 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 
 void processInput(GLFWwindow *window, RenderContext &context) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    if (showGui) {
-      showGui = false;
+    if (context.showGui) {
+      context.showGui = false;
     } else {
       // center the cursor before showing gui:
       glfwSetCursorPos(window, SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f);
-      showGui = true;
+      context.showGui = true;
     }
+  }
+  if (glfwGetKey(window, GLFW_KEY_F12) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, true);
   }
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     context.getCamera().ProcessKeyboard(FORWARD, deltaTime);
@@ -367,7 +338,7 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
   in.lastMouseX = xpos;
   in.lastMouseY = ypos;
 
-  if (!showGui) {
+  if (!context->showGui) {
     context->getCamera().ProcessMouseMovement(xOffset, yOffset);
   }
   context->setMouseInput(in);
@@ -377,10 +348,8 @@ void cursor_enter_callback(GLFWwindow *window, int entered) {
   if (entered) {
     glfwSetCursorPos(window, SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    std::cout << "Cursor entered window" << std::endl;
   } else {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    std::cout << "Cursor left window" << std::endl;
   }
 }
 

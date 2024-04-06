@@ -15,9 +15,10 @@ void RenderContext::disableDirLight() { this->useDirLight = false; }
 void RenderContext::setDirLightSettings(s_DirLightSettings &ls) {
   dirLightSettings = ls;
 }
+void RenderContext::setDirLightStatus(bool status) { useDirLight = status; }
 bool RenderContext::getDirLightStatus() { return useDirLight; }
 
-s_DirLightSettings &RenderContext::getDirLight() { return dirLightSettings; }
+s_DirLightSettings *RenderContext::getDirLight() { return &dirLightSettings; }
 
 void RenderContext::setCamera(Camera &camera) { this->camera = camera; }
 void RenderContext::setMouseInput(s_MouseInput &mouse) { this->mouse = mouse; }

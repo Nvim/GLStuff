@@ -33,6 +33,8 @@ void Model::setAsLightSource(s_LightSettings &lightSettings) {
   this->DrawStrategy = new LightSourceDrawStrategy(lightSettings);
 }
 
+IDrawStrategy *Model::getDrawStrategy() { return this->DrawStrategy; }
+
 void Model::loadModel() {
   Assimp::Importer import;
   const aiScene *scene =
@@ -195,7 +197,41 @@ void Model::scale(const glm::vec3 &scale) {
   NotifyObservers();
 }
 
+glm::vec3 Model::getCurrentScale() {
+  return glm::vec3(modelMatrix[0][0], modelMatrix[1][1], modelMatrix[2][2]);
+}
+
+void Model::setScale(glm::vec3 &newScale) {
+  modelMatrix[0][0] = newScale.x;
+  modelMatrix[1][1] = newScale.y;
+  modelMatrix[2][2] = newScale.z;
+  NotifyObservers();
+}
+
+glm::vec3 Model::getCurrentTranslation() {
+  return glm::vec3(modelMatrix[3][0], modelMatrix[3][1], modelMatrix[3][2]);
+}
+
+void Model::setTranslation(glm::vec3 &newTranslation) {
+  modelMatrix[3][0] = newTranslation.x;
+  modelMatrix[3][1] = newTranslation.y;
+  modelMatrix[3][2] = newTranslation.z;
+  NotifyObservers();
+}
+
+glm::vec3 Model::getCurrentRotation() {
+  return glm::vec3(modelMatrix[0][1], modelMatrix[1][1], modelMatrix[2][1]);
+}
+
+void Model::setRotation(glm::vec3 &newRotation) {
+  modelMatrix[0][1] = newRotation.x;
+  modelMatrix[1][1] = newRotation.y;
+  modelMatrix[2][1] = newRotation.z;
+  NotifyObservers();
+}
+
 void Model::resetModelMatrix() {
   modelMatrix = glm::mat4(1.0f);
+  std::cout << "Model matrix reset" << std::endl;
   NotifyObservers();
 }

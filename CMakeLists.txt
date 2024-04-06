@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 option(PRODUCTION_BUILD "Make this a production build" OFF)
 
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) #link time optimization
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) #link time optimization
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(GLStuff)

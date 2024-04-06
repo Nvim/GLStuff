@@ -24,6 +24,7 @@ private:
 
 public:
   RenderContext(Shader &sha);
+  bool showGui = true;
 
   void setCamera(Camera &camera);
   void setMouseInput(s_MouseInput &mouse);
@@ -40,8 +41,9 @@ public:
   void enableDirLight();
   void disableDirLight();
   void setDirLightSettings(s_DirLightSettings &ls);
+  void setDirLightStatus(bool status);
   bool getDirLightStatus();
-  s_DirLightSettings &getDirLight();
+  s_DirLightSettings *getDirLight();
 
   Camera &getCamera();
   s_MouseInput &getMouseInput();
