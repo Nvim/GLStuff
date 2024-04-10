@@ -1,4 +1,5 @@
 #include "LightSourceDrawStrategy.hpp"
+#include "imgui.h"
 #include <Gui.hpp>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -6,7 +7,21 @@
 #include <iostream>
 #include <ostream>
 
-Gui::Gui(GLFWwindow *window, const char *glsl_version) {
+std::string trimPath(const std::string &globalPath,
+                     const std::string &currentDir) {
+  size_t pos = globalPath.find(currentDir);
+  if (pos != std::string::npos) {
+    pos += currentDir.length();
+    if (globalPath[pos] == '/' || globalPath[pos] == '\\') {
+      pos++;
+    }
+    return globalPath.substr(pos);
+  }
+  return globalPath; // If currentDir not found, return the original path
+}
+
+Gui::Gui(GLFWwindow *window, RenderContext &context, const char *glsl_version)
+    : context(context) {
   // imgui init
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -17,7 +32,12 @@ Gui::Gui(GLFWwindow *window, const char *glsl_version) {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init(glsl_version);
   this->m_window = window;
+  fileDialog = ImGui::FileBrowser();
+  fileDialog.SetTitle("Select a model");
+  // ImGui::FileBrowser fileDialog;
 }
+
+void Gui::setContext(RenderContext &context) { this->context = context; }
 
 Gui::~Gui() {
   // Cleanup
@@ -33,6 +53,14 @@ void Gui::NewFrame() {
 }
 
 void Gui::Render() {
+  if (fileDialog.HasSelected()) {
+    std::string modelPath = fileDialog.GetSelected().string();
+    // TODO : GLOBAL APPNAME
+    modelPath = trimPath(modelPath, "GLStuff");
+    context.addModelByName(modelPath);
+    fileDialog.ClearSelected();
+  }
+  fileDialog.Display();
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -48,8 +76,9 @@ ImGuiIO *Gui::GetIO() { return this->io; }
 void Gui::ShowCursor() { ImGui::GetIO().MouseDrawCursor = true; }
 void Gui::HideCursor() { ImGui::GetIO().MouseDrawCursor = false; }
 
-void Gui::AppTab(RenderContext &context) {
+void Gui::AppTab() {
 
+  // ImGui::ShowDemoWindow();
   if (ImGui::BeginTabItem("APP")) {
     glm::vec3 bg = context.getBgColor();
     ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
@@ -66,10 +95,14 @@ void Gui::AppTab(RenderContext &context) {
     ImGui::EndTabItem();
     //
     context.setBgColor(bg);
+
+    if (ImGui::Button("Import a model")) {
+      fileDialog.Open();
+    }
   }
 }
 
-void Gui::DirLightTab(RenderContext &context) {
+void Gui::DirLightTab() {
   if (ImGui::BeginTabItem("DirLight")) {
     bool dirLight = context.getDirLightStatus();
     s_DirLightSettings *dirLightSettings = context.getDirLight();
@@ -87,12 +120,19 @@ void Gui::DirLightTab(RenderContext &context) {
 }
 
 void Gui::ModelTab(Model &model) {
-  if (ImGui::BeginTabItem("Model")) {
+  if (ImGui::BeginTabItem(model.getName().c_str())) {
+
+    // name:
+    // char buf[32];
+    // if (ImGui::InputText(model.getName().c_str(), buf, 32)) {
+    //   model.setName(std::string(buf));
+    // }
 
     // scale:
-    glm::vec3 modelScale = model.getCurrentScale();
-    if (ImGui::SliderFloat3("Scale", (float *)&modelScale, 0.0f, 5.0f)) {
-      model.setScale(modelScale);
+    float modelScale = model.getCurrentScale().x;
+    if (ImGui::SliderFloat("Scale", (float *)&modelScale, 0.0f, 5.0f)) {
+      glm::vec3 _scale = glm::vec3(modelScale);
+      model.setScale(_scale);
     }
 
     // translation:

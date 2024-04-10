@@ -39,8 +39,11 @@ public:
   void AddObserver(IObserver *observer) override;
   void RemoveObserver(IObserver *observer) override;
   void NotifyObservers() override;
+  void setName(std::string name);
+  std::string getName();
 
 private:
+  std::string name;
   glm::mat4 modelMatrix;
   IDrawStrategy *DrawStrategy;
   std::string path;

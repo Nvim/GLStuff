@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.12)
 
 option(PRODUCTION_BUILD "Make this a production build" OFF)
 
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) #link time optimization
 # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) #link time optimization
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -17,6 +16,9 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
 set(DGLM_BUILD_TESTS OFF CACHE BOOL "" FORCE) 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(TINYGLTF_HEADER_ONLY ON CACHE INTERNAL "" FORCE)
+set(TINYGLTF_INSTALL OFF CACHE INTERNAL "" FORCE)
+
 
 set(DEPENDENCIES_DIR deps)
 add_subdirectory(${DEPENDENCIES_DIR}/assimp)
@@ -25,6 +27,7 @@ add_subdirectory(${DEPENDENCIES_DIR}/glad)
 add_subdirectory(${DEPENDENCIES_DIR}/glm)
 add_subdirectory(${DEPENDENCIES_DIR}/stb_image)
 add_subdirectory(${DEPENDENCIES_DIR}/imgui-docking)
+add_subdirectory(${DEPENDENCIES_DIR}/tinygltf)
 
 
 add_executable("${CMAKE_PROJECT_NAME}")

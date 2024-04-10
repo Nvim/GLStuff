@@ -68,6 +68,23 @@ void RenderContext::RemoveLightSource(Model &m) {
   m.unsetLightSource();
 }
 
+void RenderContext::addModel(Model &m) { this->models.push_back(&m); }
+
+void RenderContext::addModelByName(std::string &path) {
+
+  std::cout << "Trying to load model " << path << "\n";
+  // Model _m(path.c_str());
+  Model *_m = new Model(path.c_str());
+  _m->loadModelVerbose();
+  this->models.push_back(_m);
+}
+
+void RenderContext::loadModels() {
+  for (Model *m : models) {
+    m->loadModelVerbose();
+  }
+}
+
 // getters:
 Camera &RenderContext::getCamera() { return this->camera; }
 s_MouseInput &RenderContext::getMouseInput() { return this->mouse; }

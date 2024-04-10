@@ -7,7 +7,11 @@
 #include <assimp/postprocess.h>
 #include <iostream>
 
-Model::Model(const char *path) : modelMatrix(1.0f) { this->path = path; }
+Model::Model(const char *path) : modelMatrix(1.0f), path(path) {
+  directory = this->path.substr(0, this->path.find_last_of('/'));
+  name =
+      this->path.substr(this->path.find_last_of('/') + 1, this->path.length());
+}
 
 void Model::Draw(RenderContext &context) {
   context.setModelMatrix(modelMatrix);
@@ -45,7 +49,6 @@ void Model::loadModel() {
     std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
     return;
   }
-  directory = path.substr(0, path.find_last_of('/'));
 
   processNode(scene->mRootNode, scene);
   std::cout << "Model loaded!" << std::endl;
@@ -151,6 +154,8 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
     }
 
     if (!skip) {
+      std::cout << "Trying to load **" << typeName << "** texture of path: **"
+                << filepath << "**\n";
       const char *textureType = typeName.c_str();
       const char *texturePath = filepath.c_str();
 
@@ -232,6 +237,9 @@ void Model::setRotation(glm::vec3 &newRotation) {
 
 void Model::resetModelMatrix() {
   modelMatrix = glm::mat4(1.0f);
-  std::cout << "Model matrix reset" << std::endl;
   NotifyObservers();
 }
+
+void Model::setName(std::string name) { this->name = name; }
+
+std::string Model::getName() { return name; }

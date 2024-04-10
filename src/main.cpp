@@ -33,6 +33,8 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void cursor_enter_callback(GLFWwindow *window, int entered);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window, RenderContext &context);
+void key_callback(GLFWwindow *window, int key, int scancode, int action,
+                  int mods);
 
 /* Timing: */
 float deltaTime = 0.0f;
@@ -75,36 +77,29 @@ int main() {
 
   // tell GLFW to capture our mouse
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  // glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
   // call our function when window is resized:
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetScrollCallback(window, scroll_callback);
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetCursorEnterCallback(window, cursor_enter_callback);
-
-  // imgui init
-  // IMGUI_CHECKVERSION();
-  // ImGui::CreateContext();
-  // ImGuiIO &io = ImGui::GetIO();
-  // (void)io;
-  // ImGui::StyleColorsDark();
-  // ImGui_ImplGlfw_InitForOpenGL(window, true);
-  // ImGui_ImplOpenGL3_Init("#version 330");
-  Gui gui(window, "#version 330");
+  glfwSetKeyCallback(window, key_callback);
 
   /*
     RENDERING !
   */
 
   /* Shader Program: */
-  Shader litShader("res/lighting/lit.vert", "res/lighting/litFinal.frag");
-  Shader lightSourceShader("res/lighting/lightSource.vert",
-                           "res/lighting/lightSource.frag");
+  Shader litShader("res/Shaders/lighting/lit.vert",
+                   "res/Shaders/lighting/litFinal.frag");
+  Shader lightSourceShader("res/Shaders/lighting/lightSource.vert",
+                           "res/Shaders/lighting/lightSource.frag");
 
   /* Models */
-  Model backpack("res/Helmet/DamagedHelmet.gltf");
+  // Model backpack("res/Models/Helmet/DamagedHelmet.gltf");
   // Model cube("res/cube/cube.obj");
-  backpack.loadModelVerbose();
+  // backpack.loadModelVerbose();
   // cube.loadModel();
 
   /* Matrices */
@@ -141,8 +136,20 @@ int main() {
   context.enableDirLight();
   context.setDirLightSettings(dirLightSettings);
 
+  Gui gui(window, context, "#version 330");
+
+  Model helmet("res/Models/Helmet/DamagedHelmet.gltf");
+  Model backpack("res/Models/Backpack/backpack.obj");
+  context.addModel(backpack);
+  context.addModel(helmet);
+  context.loadModels();
+
   DefaultDrawStrategy defaultStrat;
-  backpack.setDrawStrategy(defaultStrat);
+  for (Model *m : context.models) {
+    m->setDrawStrategy(defaultStrat);
+  }
+
+  // backpack.setDrawStrategy(defaultStrat);
   // cube.setDrawStrategy(defaultStrat);
   // cube.translate(glm::vec3(0.0f, 0.0f, 0.0f));
   // cube.scale(glm::vec3(0.5f, 0.5f, 0.5f));
@@ -153,9 +160,6 @@ int main() {
 
   glfwSetWindowUserPointer(window, &context);
   std::cout << "Entering game loop" << std::endl;
-
-  const float radius = 2.0f;
-  const float rotationSpeed = 0.4f;
 
   unsigned int counter = 0;
   bool dirLight;
@@ -183,15 +187,16 @@ int main() {
 
     Gui::NewFrame();
     if (context.showGui) {
-      // io->MouseDrawCursor = true;
       gui.ShowCursor();
       ImGui::Begin("MENU");
 
       if (ImGui::BeginTabBar("MyTabBar")) {
 
-        gui.AppTab(context);
-        gui.DirLightTab(context);
-        gui.ModelTab(backpack);
+        gui.AppTab();
+        gui.DirLightTab();
+        for (Model *m : context.models) {
+          gui.ModelTab(*m);
+        }
         //
         // if (ImGui::BeginTabItem("Model")) {
         //   glm::vec3 tmpPos = backpack.getModelMatrix()[3];
@@ -208,8 +213,6 @@ int main() {
     } else {
       gui.HideCursor();
     }
-
-    float angle = currentFrame * rotationSpeed; // rotation angle
 
     glClearColor(context.getBgColor().x, context.getBgColor().y,
                  context.getBgColor().z, 1.0f);
@@ -228,7 +231,9 @@ int main() {
     // cube.translate(glm::vec3(x, y, z));
     // defaultLightSettings.ambient.z = sin(time) * 2.0f;
 
-    backpack.Draw(context);
+    for (Model *m : context.models) {
+      m->Draw(context);
+    }
     // cube.Draw(context);
 
     gui.Render();
@@ -279,8 +284,10 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window, RenderContext &context) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+void key_callback(GLFWwindow *window, int key, int scancode, int action,
+                  int mods) {
+  RenderContext &context = *(RenderContext *)glfwGetWindowUserPointer(window);
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     if (context.showGui) {
       context.showGui = false;
     } else {
@@ -289,9 +296,9 @@ void processInput(GLFWwindow *window, RenderContext &context) {
       context.showGui = true;
     }
   }
-  if (glfwGetKey(window, GLFW_KEY_F12) == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, true);
-  }
+}
+
+void processInput(GLFWwindow *window, RenderContext &context) {
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     context.getCamera().ProcessKeyboard(FORWARD, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -300,25 +307,16 @@ void processInput(GLFWwindow *window, RenderContext &context) {
     context.getCamera().ProcessKeyboard(LEFT, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     context.getCamera().ProcessKeyboard(RIGHT, deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-    glfwSetCursorPosCallback(window, mouse_callback);
-  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-    if (context.getDirLightStatus() == true) {
-      context.disableDirLight();
-      std::cout << "dirlight disabled" << std::endl;
-    } else {
-      context.enableDirLight();
-      std::cout << "dirlight enabled" << std::endl;
-    }
-  }
-  if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    context.getCamera().ProcessArrows(DIR_UP, 1.0f);
-  if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    context.getCamera().ProcessArrows(DIR_DOWN, 1.0f);
-  if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-    context.getCamera().ProcessArrows(DIR_LEFT, 1.0f);
-  if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    context.getCamera().ProcessArrows(DIR_RIGHT, 1.0f);
+  // if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+  //   glfwSetCursorPosCallback(window, mouse_callback);
+  // if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+  //   context.getCamera().ProcessArrows(DIR_UP, 1.0f);
+  // if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+  //   context.getCamera().ProcessArrows(DIR_DOWN, 1.0f);
+  // if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+  //   context.getCamera().ProcessArrows(DIR_LEFT, 1.0f);
+  // if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+  //   context.getCamera().ProcessArrows(DIR_RIGHT, 1.0f);
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
@@ -355,5 +353,7 @@ void cursor_enter_callback(GLFWwindow *window, int entered) {
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
   RenderContext *context = (RenderContext *)glfwGetWindowUserPointer(window);
-  context->getCamera().ProcessMouseScroll(static_cast<float>(yoffset));
+  if (!context->showGui) {
+    context->getCamera().ProcessMouseScroll(static_cast<float>(yoffset));
+  }
 }

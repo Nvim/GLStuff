@@ -23,6 +23,7 @@ private:
   bool useDirLight;
 
 public:
+  std::vector<Model *> models;
   RenderContext(Shader &sha);
   bool showGui = true;
 
@@ -44,6 +45,10 @@ public:
   void setDirLightStatus(bool status);
   bool getDirLightStatus();
   s_DirLightSettings *getDirLight();
+
+  void addModel(Model &m);
+  void addModelByName(std::string &name);
+  void loadModels();
 
   Camera &getCamera();
   s_MouseInput &getMouseInput();
